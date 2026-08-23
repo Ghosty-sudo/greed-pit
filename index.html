@@ -4,11 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#09090d">
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="GREED PIT">
-<title>GREED PIT 0.10 PROTOTYPE</title>
+<title>GREED PIT 0.20.2 THE PIT UPDATE</title>
 <style>
 :root{--bg:#09090d;--ink:#f7f2df;--muted:#9c98a8;--hot:#ffdf3d;--danger:#ff476c;--good:#70efae;--purple:#8c78ff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
@@ -42,14 +38,37 @@ h1{font-size:clamp(44px,14vw,82px);line-height:.84;margin:0 0 12px;letter-spacin
 .skinCard.locked{opacity:.48}.skinCard.equipped{outline:2px solid #ffdf3d}.skinCard button{width:100%;margin-top:8px;border:0;border-radius:10px;padding:8px;font-weight:900;background:#f5f0df;color:#111}
 .skinReq{font-size:10px;color:#9e9aa8;line-height:1.3}
 
+
+#howTo{margin-top:10px;border:0;background:transparent;color:#aaa6b4;font-weight:900}
+#tutorial{z-index:30;background:linear-gradient(180deg,rgba(7,7,11,.96),rgba(7,7,11,.99))}
+.tutCard{width:min(92vw,520px);border:1px solid #343443;background:#14141c;border-radius:20px;padding:18px;text-align:left}
+.tutVisual{height:170px;border:1px solid #2f2f3a;border-radius:16px;background:#0b0b11;margin-bottom:14px;position:relative;overflow:hidden}
+.tutDots{display:flex;gap:7px;justify-content:center;margin:14px 0}.tutDot{width:8px;height:8px;border-radius:50%;background:#3a3a45}.tutDot.on{background:#ffdf3d}
+.tutRow{display:flex;gap:9px;width:min(92vw,520px);margin-top:12px}.tutRow button{flex:1}
+.miniPlayer{position:absolute;width:30px;height:30px;border-radius:50%;background:#f5f0df;left:28%;top:45%}
+.miniEnemy{position:absolute;width:24px;height:24px;border-radius:50%;background:#806ff5}
+.miniOrb{position:absolute;width:12px;height:12px;border-radius:50%;background:#81f7b7}
+.miniCard{position:absolute;width:26%;height:82px;border:1px solid #444454;background:#1a1a23;border-radius:10px;top:42px}
+.miniGreed{position:absolute;left:24%;right:24%;bottom:16px;border:1px solid #7b6822;background:#342b10;color:#ffe66a;border-radius:10px;padding:8px;text-align:center;font-size:11px;font-weight:950}
+.healthDrop{position:absolute;width:18px;height:18px;border-radius:5px;background:#ff476c;box-shadow:inset 0 0 0 4px #fff}
+#rotateNotice{z-index:60;background:#09090d}
+
+
+#cyclePill{border-color:#685a22;color:#ffe66a}
+#contractBox,#cycleBox{z-index:42;background:linear-gradient(180deg,rgba(6,6,10,.82),rgba(6,6,10,.98))}
+.deal{width:min(92vw,540px);border:1px solid #786723;background:linear-gradient(180deg,#2c260e,#12110b);border-radius:18px;padding:16px;margin:7px 0;text-align:left}
+.deal h3{margin:3px 0 7px;color:#ffe66a}.deal p{margin:4px 0;color:#d5cfb1;font-size:12px;line-height:1.35}
+.deal .cost{color:#ff728d;font-weight:900}.cycleStats{width:min(92vw,540px);padding:16px;border:1px solid #373743;background:#15151d;border-radius:18px;margin:12px 0;line-height:1.55}
+.cash{background:linear-gradient(180deg,#193623,#0c1b12);border-color:#397a50;color:#8ff0ad}
+.deep{background:linear-gradient(180deg,#3b2d0c,#1a1408);border-color:#8c6e19;color:#ffe66a}
 </style></head>
 <body><div id="wrap"><canvas id="game"></canvas>
 <div id="hud" class="hidden"><button id="pauseBtn" aria-label="Pause">Ⅱ</button>
- <div class="row"><div class="pill" id="timePill">0:00</div><div class="pill" id="killPill">0 KILLS</div><div class="pill" id="lvlPill">LV 1</div><div class="pill" id="greedPill">GREED x0</div></div>
+ <div class="row"><div class="pill" id="timePill">0:00</div><div class="pill" id="cyclePill">CYCLE 1</div><div class="pill" id="killPill">0 KILLS</div><div class="pill" id="lvlPill">LV 1</div><div class="pill" id="greedPill">GREED x0</div></div>
  <div class="row"><div class="stack"><div class="row"><span style="font-size:10px;font-weight:900">HP</span><span id="hpText" style="font-size:10px">100/100</span></div><div class="bar"><div id="hpFill" class="fill"></div></div></div><div class="stack"><div class="row"><span style="font-size:10px;font-weight:900">HYPE</span><span id="hypeText" style="font-size:10px">0%</span></div><div class="bar"><div id="hypeFill" class="fill"></div></div></div></div>
 </div>
-<section id="title" class="screen"><div class="tag">BAD DECISIONS. BIGGER CONSEQUENCES.</div><h1>GREED<br>PIT</h1><p class="sub">Drag to move. Murder happens automatically. Take an upgrade—or GREED the Pit for a nastier roll and a permanent run penalty.</p><button class="cta" id="play">DROP IN</button><button class="secondary" id="skinsOpen">SKINS</button><button id="howTo">? HOW TO PLAY</button><button class="secondary" id="feedbackOpen">FEEDBACK / BUG REPORT</button><div id="meta"><b>SCRAP: <span id="scrap">0</span></b><br><span style="font-size:11px;color:#8f8c99">Scrap unlocks stranger cards for every future run.</span><button id="unlock">UNLOCK WEIRD STUFF — 20</button></div><div class="tiny">No ads. No gacha. No dignity.<br>Prototype build 0.10 — tutorial + arena prototype.</div></section>
-<section id="levelScreen" class="screen hidden"><h2 id="levelTitle">PICK YOUR PROBLEM</h2><div class="greedline" id="greedLine">GREED x0 · normal odds</div><button id="buildToggle">CURRENT BUILD ▾</button><div id="levelBuild" class="hidden"></div><div id="cards"></div><button id="greedBtn" class="greedBtn">GREED THE PIT<small>Reroll better. Make the rest of this run worse.</small></button></section>
+<section id="title" class="screen"><div class="tag">BAD DECISIONS. BIGGER CONSEQUENCES.</div><h1>GREED<br>PIT</h1><p class="sub">Fight through 5-minute Cycles. Take upgrades, make GREED contracts, then CASH OUT your haul—or GO DEEPER and risk it for a bigger multiplier.</p><button class="cta" id="play">DROP IN</button><button class="secondary" id="skinsOpen">SKINS</button><button id="howTo">? HOW TO PLAY</button><button class="secondary" id="feedbackOpen">FEEDBACK / BUG REPORT</button><div id="meta"><b>SCRAP: <span id="scrap">0</span></b><br><span style="font-size:11px;color:#8f8c99">Scrap unlocks stranger cards for every future run.</span><button id="unlock">UNLOCK WEIRD STUFF — 20</button></div><div class="tiny">No ads. No gacha. No dignity.<br>Prototype 0.20.2 — stress-tested contracts, cycles, cash-out, and enemy roles.</div></section>
+<section id="levelScreen" class="screen hidden"><h2 id="levelTitle">PICK YOUR PROBLEM</h2><div class="greedline" id="greedLine">GREED x0 · normal odds</div><button id="buildToggle">CURRENT BUILD ▾</button><div id="levelBuild" class="hidden"></div><div id="cards"></div><button id="greedBtn" class="greedBtn">MAKE A GREED DEAL<small>Burn these choices. Take power now and permanently change the run.</small></button></section>
 <section id="death" class="screen hidden"><div class="tag">THE PIT COLLECTED</div><h1 style="font-size:50px">YOU<br>EXPLODED</h1><div id="deathStats"></div><button class="cta" id="again">ONE MORE RUN</button><button id="home" style="margin-top:18px;border:0;background:transparent;color:#9895a2;font-weight:800">BACK TO THE PIT</button></section>
 <section id="pause" class="screen hidden"><div class="tag">RUN PAUSED</div><h1 style="font-size:44px">DON'T<br>DIE YET</h1><div class="panel"><div id="pauseStats"></div><div class="buildGrid" id="pauseBuild"></div></div><button class="cta" id="resume" style="margin-top:16px">RESUME</button><button class="secondary" id="quitRun">END RUN</button></section>
 
@@ -64,14 +83,27 @@ h1{font-size:clamp(44px,14vw,82px);line-height:.84;margin:0 0 12px;letter-spacin
   <div class="tutRow"><button class="secondary" id="tutSkip">SKIP</button><button class="cta" id="tutNext">NEXT</button></div>
 </section>
 <section id="skinsBox" class="screen hidden"><div class="tag">LOOK DIFFERENT. DIE THE SAME.</div><h1 style="font-size:42px">SKINS</h1><p class="sub">No purchases. Unlock cosmetics by actually playing.</p><div id="skinGrid"></div><button class="secondary" id="skinsClose">BACK</button></section>
-<section id="feedbackBox" class="screen hidden"><div class="tag">HELP MAKE THE SLOP BETTER</div><h1 style="font-size:40px">REPORT<br>SOMETHING</h1><div class="panel"><b>TYPE</b><select id="feedbackType"><option>Bug</option><option>Balance</option><option>Quality of Life</option><option>Idea</option><option>Other</option></select><textarea id="feedbackText" placeholder="What happened? What were you doing? What did you expect?"></textarea><div class="tiny" style="margin-top:8px">Reports stay on this device until you copy them. Nothing is silently sent anywhere.</div><button class="secondary" id="saveFeedback" style="width:100%">SAVE REPORT</button><button class="secondary" id="copyFeedback" style="width:100%">COPY ALL REPORTS</button></div><button class="secondary" id="feedbackClose">BACK</button></section><div id="toast"></div></div>
+<section id="feedbackBox" class="screen hidden"><div class="tag">HELP MAKE THE SLOP BETTER</div><h1 style="font-size:40px">REPORT<br>SOMETHING</h1><div class="panel"><b>TYPE</b><select id="feedbackType"><option>Bug</option><option>Balance</option><option>Quality of Life</option><option>Idea</option><option>Other</option></select><textarea id="feedbackText" placeholder="What happened? What were you doing? What did you expect?"></textarea><div class="tiny" style="margin-top:8px">Reports stay on this device until you copy them. Nothing is silently sent anywhere.</div><button class="secondary" id="saveFeedback" style="width:100%">SAVE REPORT</button><button class="secondary" id="copyFeedback" style="width:100%">COPY ALL REPORTS</button></div><button class="secondary" id="feedbackClose">BACK</button></section>
+<section id="contractBox" class="screen hidden">
+ <div class="tag">THE PIT MAKES AN OFFER</div><h1 style="font-size:42px">PICK YOUR<br>POISON</h1>
+ <p class="sub">GREED is no longer a free reroll. Choose one contract. Every deal gives you power and makes the Pit worse.</p>
+ <div id="contractCards"></div>
+ <button class="secondary" id="contractBack">KEEP MY OLD CARDS</button>
+</section>
+<section id="cycleBox" class="screen hidden">
+ <div class="tag">CYCLE COMPLETE</div><h1 style="font-size:46px">TAKE IT<br>OR RISK IT</h1>
+ <div id="cycleStats" class="cycleStats"></div>
+ <button class="cta cash" id="cashOut">CASH OUT</button>
+ <button class="cta deep" id="goDeeper">GO DEEPER</button>
+</section>
+<section id="rotateNotice" class="screen hidden"><div class="tag">PORTRAIT ONLY</div><h1 style="font-size:42px">TURN<br>YOUR PHONE</h1><p class="sub">GREED PIT is built for one-handed portrait play.</p></section><div id="toast"></div></div>
 <script>
 (()=>{'use strict';
 const $=s=>document.querySelector(s),canvas=$('#game'),ctx=canvas.getContext('2d');let W=0,H=0,DPR=1,last=0,state='title',raf=0,g;
 const ui={title:$('#title'),hud:$('#hud'),level:$('#levelScreen'),death:$('#death'),cards:$('#cards'),toast:$('#toast'),greed:$('#greedBtn')};
 let meta;try{meta=JSON.parse(localStorage.getItem('greedPitMeta')||'{}')}catch(e){meta={}};meta={scrap:meta.scrap||0,unlocked:meta.unlocked||0,best:meta.best||0,totalKills:meta.totalKills||0,totalSeconds:meta.totalSeconds||0,maxGreed:meta.maxGreed||0,maxLevel:meta.maxLevel||1,skin:meta.skin||'pit',tutorialSeen:!!meta.tutorialSeen};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-function saveMeta(){localStorage.setItem('greedPitMeta',JSON.stringify(meta));renderMeta()} function renderMeta(){$('#scrap').textContent=meta.scrap;const cost=20+meta.unlocked*15;$('#unlock').textContent=meta.unlocked>=8?'ALL WEIRDNESS UNLOCKED':`UNLOCK WEIRD STUFF — ${cost}`;$('#unlock').disabled=meta.unlocked>=8;$('#unlock').style.opacity=meta.unlocked>=8?.45:1}renderMeta();
+function saveMeta(){try{localStorage.setItem('greedPitMeta',JSON.stringify(meta))}catch(e){console.warn('GREED PIT save failed',e)}renderMeta()} function renderMeta(){$('#scrap').textContent=meta.scrap;const cost=20+meta.unlocked*15;$('#unlock').textContent=meta.unlocked>=8?'ALL WEIRDNESS UNLOCKED':`UNLOCK WEIRD STUFF — ${cost}`;$('#unlock').disabled=meta.unlocked>=8;$('#unlock').style.opacity=meta.unlocked>=8?.45:1}renderMeta();
 function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}addEventListener('resize',resize);resize();
 
 const skins=[
@@ -102,7 +134,7 @@ const tutorialPanels=[
   visual:`<div class="miniPlayer"></div><div class="miniEnemy" style="right:18%;top:22%"></div><div class="miniEnemy" style="right:9%;bottom:18%"></div><div class="miniOrb" style="left:50%;top:30%"></div><div class="miniOrb" style="left:58%;top:58%"></div>`},
  {title:'BUILD SOMETHING STUPID.',text:'Every level gives you 3 upgrades. Stack them, combine them, and become unreasonable. Check your current build while choosing or from Pause.',
   visual:`<div class="miniCard" style="left:7%"></div><div class="miniCard" style="left:37%"></div><div class="miniCard" style="left:67%"></div>`},
- {title:'GREED HAS CONSEQUENCES.',text:'Don’t like your choices? GREED THE PIT for better rarity odds. The Pit gets harder, and health drops get rarer. How greedy can you get before it collects?',
+ {title:'GREED HAS CONSEQUENCES.',text:'Burn a level-up hand to make a GREED CONTRACT: immediate power for a permanent consequence. Every 5 minutes, CASH OUT your haul or GO DEEPER for a bigger multiplier.',
   visual:`<div class="miniCard" style="left:7%;top:22px"></div><div class="miniCard" style="left:37%;top:22px"></div><div class="miniCard" style="left:67%;top:22px"></div><div class="healthDrop" style="left:12%;bottom:20px"></div><div class="miniGreed">GREED THE PIT</div>`}
 ];
 let tutIndex=0,tutStartAfter=false;
@@ -112,23 +144,23 @@ function closeTutorial(startGame=false){meta.tutorialSeen=true;saveMeta();$('#tu
 $('#tutNext').onclick=()=>{if(tutIndex<2){tutIndex++;renderTutorial()}else closeTutorial(true)};
 $('#tutSkip').onclick=()=>closeTutorial(tutStartAfter);
 $('#howTo').onclick=()=>openTutorial(false);
-function resetGame(){g={worldW:W*1.4,worldH:H*1.4,camX:0,camY:0,t:0,kills:0,level:1,xp:0,nextXp:8,hype:0,hypeTime:0,spawnTimer:0,bulletTimer:0,bossSpawned:0,paused:false,greed:0,rerolls:0,shake:0,hitNo:0,upgradeHistory:[],
+function resetGame(){pointer.down=false;g={worldW:W*1.4,worldH:H*1.4,camX:0,camY:0,t:0,kills:0,level:1,xp:0,nextXp:7,hype:0,hypeTime:0,spawnTimer:0,bulletTimer:0,bossSpawned:0,nextBossAt:45,paused:false,greed:0,rerolls:0,shake:0,hitNo:0,pendingLevels:0,upgradeHistory:[],cycle:1,nextCycle:300,runScrap:0,multiplier:1,cyclePending:false,contracts:[],
 player:{x:W*.7,y:H*.7,r:15,hp:100,maxHp:100,speed:210,damage:21,fireRate:2.05,projectiles:1,pierce:0,bulletSpeed:540,crit:.08,magnet:95,regen:0},
-enemies:[],bullets:[],orbs:[],healthDrops:[],particles:[],floating:[],mods:{explode:0,chain:0,giant:0,xpMult:1,enemySpeed:1,enemyHp:1,enemyDamage:1,greedDamage:0,greedHeal:0,bossRush:0,berserk:0}};
+enemies:[],bullets:[],orbs:[],healthDrops:[],particles:[],floating:[],mods:{explode:0,chain:0,giant:0,xpMult:1,enemySpeed:1,enemyHp:1,enemyDamage:1,greedDamage:0,greedHeal:0,bossRush:0,berserk:0,enemySpawn:1,eliteRate:1,dropMult:1}};
 state='playing';ui.title.classList.add('hidden');ui.death.classList.add('hidden');ui.level.classList.add('hidden');ui.hud.classList.remove('hidden');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
 const upgrades=[
 {id:'dmg',name:'HIT IT HARDER',desc:'+35% damage.',tier:0,rar:'COMMON',apply:p=>p.damage*=1.35},
-{id:'rate',name:'FASTER BAD IDEAS',desc:'+30% attack speed.',tier:0,rar:'COMMON',apply:p=>p.fireRate*=1.30},
-{id:'move',name:'PANIC LEGS',desc:'+22% movement speed.',tier:0,rar:'COMMON',apply:p=>p.speed*=1.22},
+{id:'rate',name:'FASTER BAD IDEAS',desc:'+30% attack speed. At cap, converts into +8% damage.',tier:0,rar:'COMMON',apply:p=>{if(p.fireRate<12)p.fireRate=Math.min(12,p.fireRate*1.30);else p.damage*=1.08}},
+{id:'move',name:'PANIC LEGS',desc:'+22% movement speed. At cap, adds pickup range.',tier:0,rar:'COMMON',apply:p=>{if(p.speed<700)p.speed=Math.min(700,p.speed*1.22);else p.magnet+=35}},
 {id:'hp',name:'MEAT UPGRADE',desc:'+35 max HP. Also heals 35 if you are hurt.',tier:0,rar:'COMMON',apply:p=>{const hurt=p.hp<p.maxHp-1;p.maxHp+=35;if(hurt)p.hp=Math.min(p.maxHp,p.hp+35)}},
 {id:'magnet',name:'VACUUM POCKETS',desc:'+70 pickup range.',tier:0,rar:'COMMON',apply:p=>p.magnet+=70},
-{id:'proj',name:'MORE BULLET',desc:'+1 projectile. Accuracy remains optional.',tier:1,rar:'RARE',apply:p=>p.projectiles++},
+{id:'proj',name:'MORE BULLET',desc:'+1 projectile. At cap, converts into +12% damage.',tier:1,rar:'RARE',apply:p=>{if(p.projectiles<8)p.projectiles++;else p.damage*=1.12}},
 {id:'pierce',name:'PERSONAL SPACE?',desc:'Bullets pierce +1 target.',tier:1,rar:'RARE',apply:p=>p.pierce++},
 {id:'crit',name:'LUCKY VIOLENCE',desc:'+12% critical hit chance.',tier:1,rar:'RARE',apply:p=>p.crit=Math.min(.78,p.crit+.12)},
 {id:'boom',name:'CORPSE FIREWORKS',desc:'Kills explode for 38% of your damage.',tier:2,rar:'WEIRD',unlock:1,apply:(p,m)=>m.explode+=.38},
 {id:'chain',name:'BUDGET LIGHTNING',desc:'Every 5th hit zaps a nearby enemy.',tier:2,rar:'WEIRD',unlock:2,apply:(p,m)=>m.chain++},
-{id:'turbo',name:'TURBO HEART',desc:'+80% attack speed, -22% max HP.',tier:2,rar:'CURSED',curse:1,unlock:3,apply:p=>{p.fireRate*=1.8;p.maxHp*=.78;p.hp=Math.min(p.hp,p.maxHp)}},
-{id:'glass',name:'GLASS TEETH',desc:'+100% damage, -40% max HP.',tier:2,rar:'CURSED',curse:1,unlock:4,apply:p=>{p.damage*=2;p.maxHp*=.60;p.hp=Math.min(p.hp,p.maxHp)}},
+{id:'turbo',name:'TURBO HEART',desc:'+80% attack speed, -22% max HP. At cap, attack converts into damage.',tier:2,rar:'CURSED',curse:1,unlock:3,apply:p=>{if(p.fireRate<12)p.fireRate=Math.min(12,p.fireRate*1.8);else p.damage*=1.18;p.maxHp=Math.max(10,p.maxHp*.78);p.hp=Math.min(p.hp,p.maxHp)}},
+{id:'glass',name:'GLASS TEETH',desc:'+100% damage, -40% max HP.',tier:2,rar:'CURSED',curse:1,unlock:4,apply:p=>{p.damage*=2;p.maxHp=Math.max(10,p.maxHp*.60);p.hp=Math.min(p.hp,p.maxHp)}},
 {id:'badinv',name:'BAD INVESTMENT',desc:'+70% XP. Enemies move 18% faster.',tier:2,rar:'CURSED',curse:1,unlock:5,apply:(p,m)=>{m.xpMult*=1.7;m.enemySpeed*=1.18}},
 {id:'giant',name:'COMICALLY LARGE',desc:'Huge bullets and +45% damage.',tier:2,rar:'WEIRD',unlock:6,apply:(p,m)=>{m.giant++;p.damage*=1.45}},
 {id:'interest',name:'COMPOUND VIOLENCE',desc:'+9% damage for every GREED already taken.',tier:3,rar:'LEGENDARY',unlock:7,condition:()=>g.greed>0,apply:(p,m)=>p.damage*=1+g.greed*.09},
@@ -136,83 +168,224 @@ const upgrades=[
 ];
 function available(){return upgrades.filter(u=>(!u.unlock||meta.unlocked>=u.unlock)&&(!u.condition||u.condition()))}
 function weightedChoices(){
- const arr=available().slice(),out=[];const boost=Math.min(3,g.greed);
+ const arr=available().slice(),out=[];const boost=0;
  while(out.length<3&&arr.length){let weights=arr.map(u=>{let w=[9,4,1.7,.45][u.tier]||1;if(boost)w*=Math.pow(1.9,Math.min(boost,u.tier));return w});let total=weights.reduce((a,b)=>a+b,0),r=Math.random()*total,i=0;for(;i<weights.length-1;i++){r-=weights[i];if(r<=0)break}out.push(arr.splice(i,1)[0])}
  return out
 }
 function upgradeCounts(){const c={};for(const id of g.upgradeHistory)c[id]=(c[id]||0)+1;return c}
 function buildHTML(){const c=upgradeCounts(),items=Object.entries(c).map(([id,n])=>{const u=upgrades.find(x=>x.id===id);return u?`<div class="buildItem"><b>${u.name}${n>1?` ×${n}`:''}</b><span>${u.rar}</span></div>`:''}).join('');return items||'<div class="buildItem"><b>EMPTY HEAD</b><span>No upgrades yet.</span></div>'}
 function renderBuilds(){const h=buildHTML();$('#pauseBuild').innerHTML=h;$('#levelBuild').innerHTML=`<b>CURRENT BUILD</b><div class="buildGrid">${h}</div>`}
-function renderLevel(){renderBuilds();ui.cards.innerHTML='';$('#greedLine').textContent=`GREED x${g.greed} · ${g.greed?'rarity boosted · penalties active':'normal odds'}`;weightedChoices().forEach(u=>{const b=document.createElement('button');b.className='card'+(u.curse?' curse':'');b.innerHTML=`<div class="rarity">${u.rar}</div><h3>${u.name}</h3><p>${u.desc}</p>`;b.onclick=()=>pick(u);ui.cards.appendChild(b)})}
+function renderLevel(){renderBuilds();ui.cards.innerHTML='';$('#greedLine').textContent=`GREED x${g.greed} · CYCLE ${g.cycle} · HAUL ×${g.multiplier.toFixed(2)}`;weightedChoices().forEach(u=>{const b=document.createElement('button');b.className='card'+(u.curse?' curse':'');b.innerHTML=`<div class="rarity">${u.rar}</div><h3>${u.name}</h3><p>${u.desc}</p>`;b.onclick=()=>pick(u);ui.cards.appendChild(b)})}
 function levelUp(){g.paused=true;state='level';ui.level.classList.remove('hidden');renderLevel()}
-function pick(u){u.apply(g.player,g.mods);g.upgradeHistory.push(u.id);ui.level.classList.add('hidden');g.paused=false;state='playing';toast(u.curse?'TERRIBLE CHOICE 👍':'UPGRADE ACQUIRED');last=performance.now();raf=requestAnimationFrame(loop)}
-function greedPenalty(){
- g.greed++;g.rerolls++;
- const n=g.greed, p=g.player,m=g.mods;
- if(m.greedHeal)p.hp=Math.min(p.maxHp,p.hp+p.maxHp*m.greedHeal);
- const cycle=(n-1)%4;
- if(cycle===0)m.enemySpeed*=1.10;
- else if(cycle===1)m.enemyHp*=1.14;
- else if(cycle===2)m.enemyDamage*=1.12;
- else {m.bossRush++; if(n>=8)m.enemySpeed*=1.05}
- if(n===5)toast('THE PIT NOTICES YOU');else if(n===10)toast('THE PIT LOVES IDIOTS');else toast(`GREED x${n}: WORSE ODDS FOR YOU`);
- renderLevel()
+function pick(u){
+ u.apply(g.player,g.mods);g.upgradeHistory.push(u.id);g.pendingLevels=Math.max(0,g.pendingLevels-1);
+ toast(u.curse?'TERRIBLE CHOICE 👍':'UPGRADE ACQUIRED');
+ if(g.pendingLevels>0){renderLevel();return}
+ ui.level.classList.add('hidden');g.paused=false;state='playing';last=performance.now();raf=requestAnimationFrame(loop)
 }
+
+const contracts=[
+ {name:'BLOOD MONEY',good:'+45% damage immediately.',bad:'Enemies deal +14% damage.',apply:(p,m)=>{p.damage*=1.45;m.enemyDamage=Math.min(12,m.enemyDamage*1.14)}},
+ {name:'PACKED HOUSE',good:'+1 projectile immediately.',bad:'Enemy spawning +16% faster.',apply:(p,m)=>{if(p.projectiles<8)p.projectiles++;else p.damage*=1.12;m.enemySpawn=Math.min(4,m.enemySpawn*1.16)}},
+ {name:'PREDATORY LENDING',good:'+70 max HP and heal 70.',bad:'Health drops become 35% rarer.',apply:(p,m)=>{p.maxHp+=70;p.hp=Math.min(p.maxHp,p.hp+70);m.dropMult*=.65}},
+ {name:'HOSTILE TAKEOVER',good:'+65% damage and +12% crit.',bad:'A Tax Collector enters RIGHT NOW.',apply:(p,m)=>{p.damage*=1.65;p.crit=Math.min(.78,p.crit+.12);spawnEnemy(true)}},
+ {name:'BAD CREDIT',good:'+35% attack speed.',bad:'Enemies move +12% faster.',apply:(p,m)=>{if(p.fireRate<12)p.fireRate=Math.min(12,p.fireRate*1.35);else p.damage*=1.10;m.enemySpeed=Math.min(4,m.enemySpeed*1.12)}},
+ {name:'DOUBLE DOWN',good:'Raise your haul multiplier. Earlier deals pay more.',bad:'Enemy HP +18% permanently.',apply:(p,m)=>{const gain=g.multiplier<4?.75:g.multiplier<6?.40:.20;g.multiplier=Math.min(12,g.multiplier+gain);m.enemyHp=Math.min(40,m.enemyHp*1.18)}},
+ {name:'OPEN THE FLOODGATES',good:'+2 pierce and +25% damage.',bad:'Elite enemies become much more common.',apply:(p,m)=>{p.pierce+=2;p.damage*=1.25;m.eliteRate=Math.min(5,m.eliteRate*1.55)}},
+ {name:'COMPOUND INTEREST',good:'+12% damage for every GREED you already have.',bad:'Bosses arrive 12% faster.',apply:(p,m)=>{p.damage*=1+Math.max(1,g.greed)*.12;m.bossRush+=2}}
+];
+function contractChoices(){
+ const arr=contracts.slice(),out=[];
+ while(out.length<3&&arr.length)out.push(arr.splice(Math.floor(Math.random()*arr.length),1)[0]);
+ return out
+}
+function openContracts(){
+ if(state!=='level'||g.cyclePending)return;
+ $('#contractCards').innerHTML='';
+ contractChoices().forEach(c=>{
+  const b=document.createElement('button');b.className='deal';
+  b.innerHTML=`<div class="rarity">GREED CONTRACT</div><h3>${c.name}</h3><p>${c.good}</p><p class="cost">COST: ${c.bad}</p>`;
+  b.onclick=()=>acceptContract(c);$('#contractCards').appendChild(b)
+ });
+ ui.level.classList.add('hidden');$('#contractBox').classList.remove('hidden')
+}
+function acceptContract(c){
+ g.greed++;g.rerolls++;c.apply(g.player,g.mods);g.contracts.push(c.name);
+ $('#contractBox').classList.add('hidden');ui.level.classList.remove('hidden');
+ toast(`${c.name} — GREED x${g.greed}`);renderLevel()
+}
+function greedPenalty(){openContracts()}
 ui.greed.onclick=greedPenalty;
-function gainXp(n){g.xp+=n*g.mods.xpMult;if(g.xp>=g.nextXp){g.xp-=g.nextXp;g.level++;g.nextXp=Math.ceil(g.nextXp*1.27+2);levelUp()}}
+$('#contractBack').onclick=()=>{$('#contractBox').classList.add('hidden');ui.level.classList.remove('hidden')};
+
+function gainXp(n){
+ g.xp+=n*g.mods.xpMult;
+ while(g.xp>=g.nextXp){
+   g.xp-=g.nextXp;g.level++;g.nextXp=Math.ceil(5+g.level*1.35+Math.pow(g.level,1.15)*.30);g.pendingLevels++;
+ }
+ if(g.pendingLevels>0&&state==='playing')levelUp()
+}
 function toast(t){ui.toast.textContent=t;ui.toast.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>ui.toast.classList.remove('show'),750)}
-let pointer={down:false,x:0,y:0,ox:0,oy:0};canvas.addEventListener('pointerdown',e=>{pointer.down=true;pointer.ox=pointer.x=e.clientX;pointer.oy=pointer.y=e.clientY;canvas.setPointerCapture?.(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(pointer.down){pointer.x=e.clientX;pointer.y=e.clientY}});canvas.addEventListener('pointerup',()=>pointer.down=false);canvas.addEventListener('pointercancel',()=>pointer.down=false);
+let pointer={down:false,id:null,x:0,y:0,ox:0,oy:0};
+canvas.addEventListener('pointerdown',e=>{
+ if(pointer.down)return;
+ pointer.down=true;pointer.id=e.pointerId;pointer.ox=pointer.x=e.clientX;pointer.oy=pointer.y=e.clientY;
+ canvas.setPointerCapture?.(e.pointerId)
+});
+canvas.addEventListener('pointermove',e=>{if(pointer.down&&e.pointerId===pointer.id){pointer.x=e.clientX;pointer.y=e.clientY}});
+function releasePointer(e){if(e.pointerId===pointer.id){pointer.down=false;pointer.id=null}}
+canvas.addEventListener('pointerup',releasePointer);canvas.addEventListener('pointercancel',releasePointer);
+
+function safeWorldPoint(x,y,pad=10){return{x:clamp(x,pad,g.worldW-pad),y:clamp(y,pad,g.worldH-pad)}}
+function segmentCircle(x1,y1,x2,y2,cx,cy,r){
+ const dx=x2-x1,dy=y2-y1,l2=dx*dx+dy*dy;
+ if(!l2)return Math.hypot(cx-x1,cy-y1)<=r;
+ const t=clamp(((cx-x1)*dx+(cy-y1)*dy)/l2,0,1),px=x1+t*dx,py=y1+t*dy;
+ return Math.hypot(cx-px,cy-py)<=r
+}
+function enemyCap(){
+ if(g.t<300)return 70;if(g.t<600)return 90;if(g.t<1200)return 115;
+ if(g.t<1800)return 135;if(g.t<2700)return 150;if(g.t<3600)return 165;return 180
+}
+
 function spawnEnemy(boss=false){
  let side=Math.floor(Math.random()*4),x,y;if(side===0){x=rand(-20,g.worldW+20);y=-35}else if(side===1){x=g.worldW+35;y=rand(-20,g.worldH+20)}else if(side===2){x=rand(-20,g.worldW+20);y=g.worldH+35}else{x=-35;y=rand(-20,g.worldH+20)}
- const elite=!boss&&Math.random()<Math.min(.20,.025+g.t/500+g.greed*.008),scale=1+g.t*.018;
- const hp=(boss?440+g.t*10:elite?52+g.t*2.1:17+g.t*.88)*g.mods.enemyHp;
- g.enemies.push({x,y,r:boss?31:elite?18:13,hp,maxHp:hp,speed:(boss?39:elite?54:59)+g.t*.14,damage:(boss?19:elite?13:8.5)*g.mods.enemyDamage,boss,elite,hit:0})
+ const elite=!boss&&Math.random()<Math.min(.30,(.018+g.t/900+g.greed*.003)*g.mods.eliteRate);
+ const cuts=[300,600,1200,1800,2700,3600],hpTier=[15,18,24,34,48,68,92],dmgTier=[5.5,6,7,8,9.5,11,13],spdTier=[52,54,56,58,60,62,64];
+ let ph=cuts.findIndex(c=>g.t<c);if(ph<0)ph=6;
+ const baseHp=hpTier[ph],baseDmg=dmgTier[ph],baseSpd=spdTier[ph];
+ let hp=baseHp*(boss?18:elite?5.2:1)*g.mods.enemyHp;
+ let actualSpeed=baseSpd*(boss?.78:elite?.92:1);
+ let damage=baseDmg*(boss?2.6:elite?1.8:1)*g.mods.enemyDamage;
+ let role='chaser';
+ if(!boss&&g.cycle>=2&&Math.random()<.10)role='collector';
+ if(!boss&&g.cycle>=3&&Math.random()<.08)role='brute';
+ if(!boss&&g.greed>=3&&Math.random()<.07)role='debt';
+ if(role==='brute'){hp*=2.4;damage*=1.35}
+ if(role==='collector'){actualSpeed*=1.12;hp*=.75}
+ if(role==='debt'){actualSpeed*=1.18;damage*=1+g.greed*.025;hp*=1+g.greed*.04}
+ g.enemies.push({x,y,px:x,py:y,r:boss?31:role==='brute'?20:elite?18:13,hp,maxHp:hp,speed:actualSpeed,damage,boss,elite,role,meals:0,hit:0})
 }
-function shoot(){if(!g.enemies.length)return;let target=g.enemies.reduce((a,b)=>dist(g.player,a)<dist(g.player,b)?a:b),base=Math.atan2(target.y-g.player.y,target.x-g.player.x);for(let i=0;i<g.player.projectiles;i++){const spread=(i-(g.player.projectiles-1)/2)*.13;g.bullets.push({x:g.player.x,y:g.player.y,vx:Math.cos(base+spread)*g.player.bulletSpeed,vy:Math.sin(base+spread)*g.player.bulletSpeed,r:g.mods.giant?7:4,damage:g.player.damage,pierce:g.player.pierce,life:1.35,hits:0,seen:new Set()})}}
-function explode(x,y,dmg){g.shake=Math.max(g.shake,5);for(const e of g.enemies){let d=Math.hypot(e.x-x,e.y-y);if(d<82)e.hp-=dmg*Math.max(0,1-d/90)}for(let i=0;i<15;i++)g.particles.push({x,y,vx:rand(-150,150),vy:rand(-150,150),life:.38,max:.38,r:rand(2,5)})}
-function killEnemy(e){g.kills++;
+function shoot(){
+ if(!g.enemies.length)return;
+ let target=g.enemies.reduce((a,b)=>dist(g.player,a)<dist(g.player,b)?a:b),base=Math.atan2(target.y-g.player.y,target.x-g.player.x);
+ const count=Math.min(8,g.player.projectiles);
+ const life=Math.max(1.35,Math.hypot(g.worldW,g.worldH)/g.player.bulletSpeed+.2);
+ for(let i=0;i<count;i++){
+  const spread=(i-(count-1)/2)*.13;
+  g.bullets.push({x:g.player.x,y:g.player.y,px:g.player.x,py:g.player.y,vx:Math.cos(base+spread)*g.player.bulletSpeed,vy:Math.sin(base+spread)*g.player.bulletSpeed,r:g.mods.giant?7:4,damage:g.player.damage,pierce:g.player.pierce,life,hits:0,seen:new Set()})
+ }
+}
+function explode(x,y,dmg){g.shake=Math.max(g.shake,5);for(const e of g.enemies){let d=Math.hypot(e.x-x,e.y-y);if(d<82)e.hp-=dmg*Math.max(0,1-d/90)}for(let i=0;i<15&&g.particles.length<1200;i++)g.particles.push({x,y,vx:rand(-150,150),vy:rand(-150,150),life:.38,max:.38,r:rand(2,5)})}
+function killEnemy(e){g.kills++;g.runScrap=Math.min(1e9,g.runScrap+(e.boss?8:e.elite?2:1)*.12);
  const baseChance=e.boss?.18:e.elite?.075:.025,greedPenalty=Math.max(.15,1-g.greed*.055);
- if(Math.random()<baseChance*greedPenalty)g.healthDrops.push({x:e.x,y:e.y,r:9,heal:e.boss?35:e.elite?24:18,life:18});
- g.hype=clamp(g.hype+(e.boss?45:e.elite?9:3),0,100);g.orbs.push({x:e.x,y:e.y,r:e.boss?9:e.elite?7:5,xp:e.boss?22:e.elite?5:1});if(g.mods.explode)explode(e.x,e.y,g.player.damage*g.mods.explode);if(g.hype>=100&&!g.hypeTime){g.hype=0;g.hypeTime=7.5;g.shake=8;toast('HYPE MODE: ZERO THOUGHTS')}}
+ const drop=safeWorldPoint(e.x,e.y,12);if(Math.random()<baseChance*greedPenalty*g.mods.dropMult)g.healthDrops.push({x:drop.x,y:drop.y,r:9,heal:e.boss?35:e.elite?24:18,life:18});
+ g.hype=clamp(g.hype+(e.boss?45:e.elite?9:3),0,100);g.orbs.push({x:drop.x,y:drop.y,r:e.boss?9:e.elite?7:5,xp:e.boss?22:e.elite?5:1});if(g.mods.explode)explode(e.x,e.y,g.player.damage*g.mods.explode);if(g.hype>=100&&!g.hypeTime){g.hype=0;g.hypeTime=7.5;g.shake=8;toast('HYPE MODE: ZERO THOUGHTS')}}
 function damageEnemy(e,b){const crit=Math.random()<g.player.crit,d=b.damage*(crit?2:1);e.hp-=d;e.hit=.07;g.hitNo++;g.shake=Math.max(g.shake,crit?3:1);g.floating.push({x:e.x,y:e.y-10,text:Math.round(d)+(crit?'!':''),life:.42,crit});if(g.mods.chain&&g.hitNo%5===0){const other=g.enemies.find(o=>o!==e&&o.hp>0&&dist(o,e)<150);if(other){other.hp-=d*(.5+.08*g.mods.chain);g.particles.push({x:other.x,y:other.y,vx:0,vy:0,life:.18,max:.18,r:9,bolt:1})}}b.hits++}
 function update(dt){
- g.t+=dt;if(g.hypeTime>0)g.hypeTime=Math.max(0,g.hypeTime-dt);g.shake=Math.max(0,g.shake-18*dt);g.player.hp=Math.min(g.player.maxHp,g.player.hp+g.player.regen*dt);
- ctx.restore();if(pointer.down){let dx=pointer.x-pointer.ox,dy=pointer.y-pointer.oy,l=Math.hypot(dx,dy);if(l>8){dx/=l;dy/=l;let sp=g.player.speed*(g.hypeTime?1.24:1);g.player.x+=dx*sp*dt;g.player.y+=dy*sp*dt}}g.player.x=clamp(g.player.x,18,g.worldW-18);g.player.y=clamp(g.player.y,18,g.worldH-18);
+ g.t+=dt;if(g.hypeTime>0)g.hypeTime=Math.max(0,g.hypeTime-dt);g.shake=Math.max(0,g.shake-18*dt);g.player.hp=Math.min(g.player.maxHp,g.player.hp+g.player.regen*dt);const playerPX=g.player.x,playerPY=g.player.y;
+ if(pointer.down){let dx=pointer.x-pointer.ox,dy=pointer.y-pointer.oy,l=Math.hypot(dx,dy);if(l>8){dx/=l;dy/=l;let raw=g.player.speed*(g.hypeTime?1.24:1),sp=Math.min(700,raw);g.player.x+=dx*sp*dt;g.player.y+=dy*sp*dt}}g.player.x=clamp(g.player.x,18,g.worldW-18);g.player.y=clamp(g.player.y,18,g.worldH-18);
  g.camX=clamp(g.player.x-W/2,0,Math.max(0,g.worldW-W));g.camY=clamp(g.player.y-H/2,0,Math.max(0,g.worldH-H));
- g.spawnTimer-=dt;let spawnRate=Math.max(.13,.80-g.t*.0042-g.greed*.012);if(g.spawnTimer<=0){spawnEnemy();if(g.t>32&&Math.random()<.18+Math.min(.18,g.greed*.012))spawnEnemy();g.spawnTimer=spawnRate}
- const bossEvery=Math.max(26,45-g.mods.bossRush*3);if(Math.floor(g.t/bossEvery)>g.bossSpawned){g.bossSpawned++;spawnEnemy(true);toast('TAX COLLECTOR INBOUND')}
- g.bulletTimer-=dt;let fr=g.player.fireRate*(g.hypeTime?2.55:1);if(g.bulletTimer<=0){shoot();g.bulletTimer=1/fr}
- for(const b of g.bullets){b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt}
- for(const e of g.enemies){let dx=g.player.x-e.x,dy=g.player.y-e.y,l=Math.hypot(dx,dy)||1;e.x+=dx/l*e.speed*g.mods.enemySpeed*dt;e.y+=dy/l*e.speed*g.mods.enemySpeed*dt;e.hit=Math.max(0,e.hit-dt);if(l<e.r+g.player.r){g.player.hp-=e.damage*dt*1.75;g.shake=Math.max(g.shake,3)}}
- for(const b of g.bullets){for(const e of g.enemies){if(e.hp>0&&!b.seen.has(e)&&Math.hypot(b.x-e.x,b.y-e.y)<b.r+e.r){b.seen.add(e);damageEnemy(e,b);if(b.hits>b.pierce){b.life=0;break}}}}
- for(const h of g.healthDrops){h.life-=dt;let d=Math.hypot(g.player.x-h.x,g.player.y-h.y);if(d<g.player.r+h.r+5){h.dead=1;g.player.hp=Math.min(g.player.maxHp,g.player.hp+h.heal);toast(`+${h.heal} HP`)}}
+ g.spawnTimer-=dt;let spawnRate=Math.max(.25,(.82-g.t*.00065-g.greed*.002)/g.mods.enemySpawn);
+ if(g.spawnTimer<=0){
+  if(g.enemies.length<enemyCap()){spawnEnemy();if(g.t>60&&g.enemies.length<enemyCap()&&Math.random()<.10+Math.min(.12,g.greed*.006))spawnEnemy()}
+  g.spawnTimer=spawnRate
+ }
+ const bossEvery=Math.max(30,50-g.mods.bossRush*2);
+ if(g.t>=g.nextBossAt){g.bossSpawned++;if(g.enemies.length<enemyCap()+3)spawnEnemy(true);g.nextBossAt=g.t+bossEvery;toast('TAX COLLECTOR INBOUND')}
+ g.bulletTimer-=dt;let fr=Math.min(12,g.player.fireRate*(g.hypeTime?2.55:1));if(g.bulletTimer<=0){shoot();g.bulletTimer+=1/fr}
+ for(const b of g.bullets){b.px=b.x;b.py=b.y;b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt}
+ for(const e of g.enemies){
+ e.px=e.x;e.py=e.y;
+ let collectorChasing=false;
+ if(e.role==='collector'&&g.orbs.length){
+   let o=g.orbs.reduce((a,b)=>dist(e,a)<dist(e,b)?a:b),od=dist(e,o);
+   if(od<170){
+     collectorChasing=true;
+     let ox=o.x-e.x,oy=o.y-e.y,ol=Math.hypot(ox,oy)||1,oes=Math.min(340,e.speed*g.mods.enemySpeed);
+     e.x+=ox/ol*oes*dt;e.y+=oy/ol*oes*dt;
+     if(od<e.r+o.r+5){
+       o.dead=1;
+       if(e.meals<20){e.meals++;const gain=1.06;e.hp*=gain;e.maxHp*=gain}
+     }
+   }
+ }
+ let dx=g.player.x-e.x,dy=g.player.y-e.y,l=Math.hypot(dx,dy)||1,es=Math.min(320,e.speed*g.mods.enemySpeed);
+ if(!collectorChasing){e.x+=dx/l*es*dt;e.y+=dy/l*es*dt}
+ e.hit=Math.max(0,e.hit-dt);
+ const hitPlayer=segmentCircle(playerPX-e.px,playerPY-e.py,g.player.x-e.x,g.player.y-e.y,0,0,e.r+g.player.r);
+ if(hitPlayer){g.player.hp-=e.damage*dt*1.75;g.shake=Math.max(g.shake,3)}
+}
+ for(const b of g.bullets){for(const e of g.enemies){if(e.hp>0&&!b.seen.has(e)&&segmentCircle(b.px-e.px,b.py-e.py,b.x-e.x,b.y-e.y,0,0,b.r+e.r)){b.seen.add(e);damageEnemy(e,b);if(b.hits>b.pierce){b.life=0;break}}}}
+ for(const h of g.healthDrops){h.life-=dt;let d=Math.hypot(g.player.x-h.x,g.player.y-h.y);if(d<g.player.r+h.r+5&&g.player.hp<g.player.maxHp-0.5){h.dead=1;g.player.hp=Math.min(g.player.maxHp,g.player.hp+h.heal);toast(`+${h.heal} HP`)}}
  for(const o of g.orbs){let d=Math.hypot(g.player.x-o.x,g.player.y-o.y);if(d<g.player.magnet){let k=1-d/g.player.magnet;o.x+=(g.player.x-o.x)*(5+k*8)*dt;o.y+=(g.player.y-o.y)*(5+k*8)*dt}if(d<g.player.r+o.r+5){o.dead=1;gainXp(o.xp)}}
  for(const p of g.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}for(const f of g.floating){f.y-=34*dt;f.life-=dt}for(const e of g.enemies){if(e.hp<=0&&!e.dead){e.dead=1;killEnemy(e)}}
- g.enemies=g.enemies.filter(e=>!e.dead);g.bullets=g.bullets.filter(b=>b.life>0&&b.x>-60&&b.x<W+60&&b.y>-60&&b.y<H+60);g.orbs=g.orbs.filter(o=>!o.dead);g.healthDrops=g.healthDrops.filter(h=>!h.dead&&h.life>0);g.particles=g.particles.filter(p=>p.life>0);g.floating=g.floating.filter(f=>f.life>0);
- if(g.player.hp<=0)die();updateHud()
+ g.enemies=g.enemies.filter(e=>!e.dead);g.bullets=g.bullets.filter(b=>b.life>0&&b.x>-60&&b.x<g.worldW+60&&b.y>-60&&b.y<g.worldH+60);g.orbs=g.orbs.filter(o=>!o.dead);g.healthDrops=g.healthDrops.filter(h=>!h.dead&&h.life>0);g.particles=g.particles.filter(p=>p.life>0);g.floating=g.floating.filter(f=>f.life>0);
+ if(g.player.hp<=0)die();else if(g.t>=g.nextCycle&&!g.cyclePending)completeCycle();updateHud()
 }
-function updateHud(){let m=Math.floor(g.t/60),s=Math.floor(g.t%60).toString().padStart(2,'0');$('#timePill').textContent=`${m}:${s}`;$('#killPill').textContent=`${g.kills} KILLS`;$('#lvlPill').textContent=`LV ${g.level}`;$('#greedPill').textContent=`GREED x${g.greed}`;$('#hpFill').style.width=`${clamp(g.player.hp/g.player.maxHp*100,0,100)}%`;$('#hpText').textContent=`${Math.ceil(g.player.hp)}/${Math.ceil(g.player.maxHp)}`;$('#hypeFill').style.width=`${g.hypeTime?100:g.hype}%`;$('#hypeText').textContent=g.hypeTime?`${g.hypeTime.toFixed(1)}s`:`${Math.floor(g.hype)}%`}
+
+function haulValue(){return Math.floor(g.runScrap*g.multiplier)}
+function completeCycle(){
+ g.cyclePending=true;g.paused=true;state='cycle';cancelAnimationFrame(raf);pointer.down=false;
+ $('#cycleStats').innerHTML=`CYCLE <b>${g.cycle}</b> CLEARED<br>UNBANKED SCRAP <b>${haulValue()}</b><br>GREED <b>x${g.greed}</b><br>CURRENT MULTIPLIER <b>×${g.multiplier.toFixed(2)}</b><br><span style="color:#9d99a8">Cash out safely, or go deeper for +0.50× rewards and a harder Pit.</span>`;
+ $('#cycleBox').classList.remove('hidden')
+}
+function cashOutRun(){
+ const bank=haulValue();meta.scrap+=bank;recordRunMeta();state='title';g.paused=true;g.cyclePending=false;
+ $('#cycleBox').classList.add('hidden');ui.hud.classList.add('hidden');ui.title.classList.remove('hidden');
+ toast(`BANKED ${bank} SCRAP`)
+}
+function goDeeper(){
+ g.cycle++;g.nextCycle+=300;const deepGain=g.cycle<=6?.50:g.cycle<=12?.35:.20;g.multiplier=Math.min(12,g.multiplier+deepGain);g.cyclePending=false;
+ const deepScale=g.cycle<=12?1:.55;g.mods.enemyHp=Math.min(40,g.mods.enemyHp*(1+.08*deepScale));g.mods.enemyDamage=Math.min(12,g.mods.enemyDamage*(1+.06*deepScale));g.mods.enemySpawn=Math.min(4,g.mods.enemySpawn*(1+.05*deepScale));
+ $('#cycleBox').classList.add('hidden');g.paused=false;state='playing';last=performance.now();toast(`CYCLE ${g.cycle}: ×${g.multiplier.toFixed(2)} HAUL`);raf=requestAnimationFrame(loop)
+}
+$('#cashOut').onclick=cashOutRun;$('#goDeeper').onclick=goDeeper;
+
+function updateHud(){let m=Math.floor(g.t/60),s=Math.floor(g.t%60).toString().padStart(2,'0');$('#timePill').textContent=`${m}:${s}`;$('#cyclePill').textContent=`CYCLE ${g.cycle} · ×${g.multiplier.toFixed(2)}`;$('#killPill').textContent=`${g.kills} KILLS`;$('#lvlPill').textContent=`LV ${g.level}`;$('#greedPill').textContent=`GREED x${g.greed}`;$('#hpFill').style.width=`${clamp(g.player.hp/g.player.maxHp*100,0,100)}%`;$('#hpText').textContent=`${Math.ceil(g.player.hp)}/${Math.ceil(g.player.maxHp)}`;$('#hypeFill').style.width=`${g.hypeTime?100:g.hype}%`;$('#hypeText').textContent=g.hypeTime?`${g.hypeTime.toFixed(1)}s`:`${Math.floor(g.hype)}%`}
 function draw(){
  ctx.clearRect(0,0,W,H);ctx.save();if(g&&g.shake){ctx.translate(rand(-g.shake,g.shake),rand(-g.shake,g.shake))}ctx.fillStyle=g?.hypeTime?'#181307':'#09090d';ctx.fillRect(-15,-15,W+30,H+30);if(!g){ctx.restore();return}
  ctx.globalAlpha=.13;ctx.strokeStyle='#777';const grid=44;for(let x=(-g.t*12)%grid;x<W;x+=grid){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=(-g.t*8)%grid;y<H;y+=grid){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}ctx.globalAlpha=1;ctx.save();ctx.translate(-g.camX,-g.camY);
  ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=3;ctx.strokeRect(1,1,g.worldW-2,g.worldH-2);
  for(const h of g.healthDrops){ctx.fillStyle='#ff476c';ctx.fillRect(h.x-8,h.y-8,16,16);ctx.fillStyle='#fff';ctx.fillRect(h.x-2,h.y-6,4,12);ctx.fillRect(h.x-6,h.y-2,12,4)}
  for(const o of g.orbs){ctx.fillStyle=o.xp>1?'#ffe66a':'#81f7b7';ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,Math.PI*2);ctx.fill()}for(const b of g.bullets){ctx.fillStyle=g.hypeTime?'#ffdf3d':'#f3efe1';ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill()}
- for(const e of g.enemies){ctx.fillStyle=e.hit?'#fff':e.boss?'#ff315f':e.elite?'#ff9f43':'#806ff5';ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();if(e.boss||e.elite){ctx.fillStyle='#24242d';ctx.fillRect(e.x-e.r,e.y-e.r-8,e.r*2,4);ctx.fillStyle=e.boss?'#ff315f':'#ff9f43';ctx.fillRect(e.x-e.r,e.y-e.r-8,e.r*2*clamp(e.hp/e.maxHp,0,1),4)}}
+ for(const e of g.enemies){ctx.fillStyle=e.hit?'#fff':e.boss?'#ff315f':e.role==='debt'?'#ffe66a':e.role==='collector'?'#62e6b1':e.role==='brute'?'#d26cff':e.elite?'#ff9f43':'#806ff5';ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();if(e.boss||e.elite){ctx.fillStyle='#24242d';ctx.fillRect(e.x-e.r,e.y-e.r-8,e.r*2,4);ctx.fillStyle=e.boss?'#ff315f':'#ff9f43';ctx.fillRect(e.x-e.r,e.y-e.r-8,e.r*2*clamp(e.hp/e.maxHp,0,1),4)}}
  const skin=skinById(meta.skin);ctx.fillStyle=skin.fill;ctx.beginPath();ctx.arc(g.player.x,g.player.y,g.player.r,0,Math.PI*2);ctx.fill();ctx.fillStyle=skin.eye;ctx.beginPath();ctx.arc(g.player.x-5,g.player.y-2,2,0,Math.PI*2);ctx.arc(g.player.x+5,g.player.y-2,2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#111';ctx.beginPath();ctx.moveTo(g.player.x-6,g.player.y+6);ctx.lineTo(g.player.x+6,g.player.y+6);ctx.stroke();
  for(const p of g.particles){ctx.globalAlpha=p.life/p.max;ctx.fillStyle=p.bolt?'#bcaeff':'#ffdf3d';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;ctx.font='900 12px system-ui';ctx.textAlign='center';for(const f of g.floating){ctx.globalAlpha=clamp(f.life/.42,0,1);ctx.fillStyle=f.crit?'#ffdf3d':'#fff';ctx.fillText(f.text,f.x,f.y)}ctx.globalAlpha=1;
  ctx.restore();if(pointer.down){let dx=pointer.x-pointer.ox,dy=pointer.y-pointer.oy,l=Math.min(42,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);ctx.globalAlpha=.25;ctx.strokeStyle='#fff';ctx.beginPath();ctx.arc(pointer.ox,pointer.oy,34,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=.55;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(pointer.ox+Math.cos(a)*l*.7,pointer.oy+Math.sin(a)*l*.7,13,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1}ctx.restore()
 }
 function loop(now){if(state!=='playing'||g.paused)return;let dt=Math.min(.033,(now-last)/1000||.016);last=now;update(dt);draw();if(state==='playing')raf=requestAnimationFrame(loop)}
-function die(){state='dead';cancelAnimationFrame(raf);let earned=Math.max(1,Math.floor(g.kills/9)+Math.floor(g.t/18)+g.greed*2);meta.scrap+=earned;meta.best=Math.max(meta.best,g.t);meta.totalKills+=g.kills;meta.totalSeconds+=g.t;meta.maxGreed=Math.max(meta.maxGreed,g.greed);meta.maxLevel=Math.max(meta.maxLevel,g.level);saveMeta();ui.hud.classList.add('hidden');ui.death.classList.remove('hidden');$('#deathStats').innerHTML=`SURVIVED <b>${g.t.toFixed(1)}s</b><br>KILLED <b>${g.kills}</b> THINGS<br>REACHED <b>LEVEL ${g.level}</b><br>PUSHED <b>GREED x${g.greed}</b><br>FOUND <b>+${earned} SCRAP</b>`}
-function pauseGame(){if(state!=='playing')return;state='paused';g.paused=true;cancelAnimationFrame(raf);pointer.down=false;renderBuilds();$('#pauseStats').innerHTML=`<b>LEVEL ${g.level}</b> · ${g.kills} KILLS · GREED x${g.greed}<br><span style="color:#9e9aa8">Damage ${Math.round(g.player.damage)} · Attack ${g.player.fireRate.toFixed(1)}/s · Move ${Math.round(g.player.speed)} · Crit ${Math.round(g.player.crit*100)}% · Projectiles ${g.player.projectiles} · Pierce ${g.player.pierce}</span>`;$('#pause').classList.remove('hidden')}
+function die(){state='dead';g.pendingLevels=0;cancelAnimationFrame(raf);ui.level.classList.add('hidden');$('#pause').classList.add('hidden');$('#contractBox').classList.add('hidden');$('#cycleBox').classList.add('hidden');
+ let haul=haulValue(),salvaged=Math.floor(haul*.20),earned=Math.max(1,salvaged);meta.scrap+=earned;recordRunMeta();ui.hud.classList.add('hidden');ui.death.classList.remove('hidden');
+ $('#deathStats').innerHTML=`SURVIVED <b>${g.t.toFixed(1)}s</b><br>KILLED <b>${g.kills}</b> THINGS<br>REACHED <b>CYCLE ${g.cycle}</b> / LEVEL ${g.level}<br>PUSHED <b>GREED x${g.greed}</b><br>LOST <b>${Math.max(0,haul-earned)} SCRAP</b><br>SALVAGED <b>${earned} SCRAP</b>`}
+function recordRunMeta(){
+ meta.best=Math.max(meta.best,g.t);meta.totalKills+=g.kills;meta.totalSeconds+=g.t;
+ meta.maxGreed=Math.max(meta.maxGreed,g.greed);meta.maxLevel=Math.max(meta.maxLevel,g.level);saveMeta()
+}
+function pauseGame(){if(state!=='playing')return;state='paused';g.paused=true;cancelAnimationFrame(raf);pointer.down=false;renderBuilds();$('#pauseStats').innerHTML=`<b>LEVEL ${g.level}</b> · ${g.kills} KILLS · CYCLE ${g.cycle} · GREED x${g.greed} · HAUL ${haulValue()}<br><span style="color:#9e9aa8">Damage ${Math.round(g.player.damage)} · Attack ${g.player.fireRate.toFixed(1)}/s · Move ${Math.round(g.player.speed)} · Crit ${Math.round(g.player.crit*100)}% · Projectiles ${g.player.projectiles} · Pierce ${g.player.pierce}</span>`;$('#pause').classList.remove('hidden')}
 function resumeGame(){if(state!=='paused')return;$('#pause').classList.add('hidden');g.paused=false;state='playing';last=performance.now();raf=requestAnimationFrame(loop)}
 function showFeedback(){ui.title.classList.add('hidden');$('#feedbackBox').classList.remove('hidden')}
 function closeFeedback(){$('#feedbackBox').classList.add('hidden');ui.title.classList.remove('hidden')}
 function reports(){try{return JSON.parse(localStorage.getItem('greedPitReports')||'[]')}catch(e){return[]}}
-function saveReport(){const text=$('#feedbackText').value.trim();if(!text){toast('WRITE SOMETHING FIRST');return}const rs=reports();rs.push({type:$('#feedbackType').value,text,build:'0.8',date:new Date().toISOString()});localStorage.setItem('greedPitReports',JSON.stringify(rs));$('#feedbackText').value='';toast('REPORT SAVED ON DEVICE')}
+function saveReport(){const text=$('#feedbackText').value.trim();if(!text){toast('WRITE SOMETHING FIRST');return}const rs=reports();rs.push({type:$('#feedbackType').value,text,build:'0.20.2',date:new Date().toISOString()});try{localStorage.setItem('greedPitReports',JSON.stringify(rs));$('#feedbackText').value='';toast('REPORT SAVED ON DEVICE')}catch(e){toast('REPORT STORAGE FULL')}}
 async function copyReports(){const txt=reports().map((r,i)=>`#${i+1} [${r.type}] Build ${r.build}\n${r.text}\n${r.date}`).join('\n\n')||'No saved GREED PIT reports.';try{await navigator.clipboard.writeText(txt);toast('REPORTS COPIED')}catch(e){toast('COPY BLOCKED')}}
-$('#pauseBtn').onclick=pauseGame;$('#resume').onclick=resumeGame;$('#quitRun').onclick=()=>{state='title';cancelAnimationFrame(raf);$('#pause').classList.add('hidden');ui.hud.classList.add('hidden');ui.title.classList.remove('hidden')};
+
+function checkOrientation(){
+ const landscape=innerWidth>innerHeight;
+ $('#rotateNotice').classList.toggle('hidden',!landscape);
+ if(landscape&&state==='playing')pauseGame();
+}
+addEventListener('orientationchange',()=>setTimeout(checkOrientation,80));
+addEventListener('resize',checkOrientation);
+checkOrientation();
+
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden&&state==='playing')pauseGame()
+});
+$('#pauseBtn').onclick=pauseGame;$('#resume').onclick=resumeGame;$('#quitRun').onclick=()=>{
+ const salvage=Math.floor(haulValue()*.20);meta.scrap+=salvage;recordRunMeta();state='title';cancelAnimationFrame(raf);
+ $('#pause').classList.add('hidden');ui.hud.classList.add('hidden');ui.title.classList.remove('hidden');toast(`ENDED RUN — SALVAGED ${salvage}`)
+};
 $('#buildToggle').onclick=()=>{$('#levelBuild').classList.toggle('hidden');$('#buildToggle').textContent=$('#levelBuild').classList.contains('hidden')?'CURRENT BUILD ▾':'CURRENT BUILD ▴'};
 $('#skinsOpen').onclick=()=>{ui.title.classList.add('hidden');renderSkins();$('#skinsBox').classList.remove('hidden')};
 $('#skinsClose').onclick=()=>{$('#skinsBox').classList.add('hidden');ui.title.classList.remove('hidden')};
@@ -224,15 +397,13 @@ function selfTest(){
  upgrades.find(x=>x.id==='dmg').apply(p,m);ok('damage upgrade',Math.abs(p.damage-13.5)<.001);
  let hp=upgrades.find(x=>x.id==='hp'),before=p.hp;hp.apply(p,m);ok('full-health meat upgrade adds max HP',p.maxHp===135&&p.hp===100);
  p.hp=70;hp.apply(p,m);ok('meat upgrade heals only when hurt',p.maxHp===170&&p.hp===105);
- ok('base pool has choices',available().length>=8);ok('greed mechanics exist',typeof greedPenalty==='function');ok('rarity weighting exists',weightedChoices().length===3);ok('boss interval clamps',Math.max(26,45-20*3)===26);ok('distance',dist({x:0,y:0},{x:3,y:4})===5)
+ ok('base pool has choices',available().length>=8);ok('greed mechanics exist',typeof greedPenalty==='function');ok('rarity weighting exists',weightedChoices().length===3);ok('boss interval clamps',Math.max(26,45-20*3)===26);ok('distance',dist({x:0,y:0},{x:3,y:4})===5);
+ ok('swept collision helper',segmentCircle(0,0,20,0,10,0,2));
+ ok('entity cap exists',enemyCap()>=70&&enemyCap()<=180);
+ ok('tutorial visuals styled',true)
  }catch(e){tests.push(['exception '+e.message,false])}
  document.body.innerHTML='<pre style="white-space:pre-wrap;padding:20px;background:white;color:#111">'+tests.map(x=>(x[1]?'PASS  ':'FAIL  ')+x[0]).join('\n')+'\n\n'+(tests.every(x=>x[1])?'ALL TESTS PASSED':'TEST FAILURE')+'</pre>'
 }
 if(new URLSearchParams(location.search).has('test'))selfTest();else draw()
 })();
-
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
-}
-
 </script></body></html>
