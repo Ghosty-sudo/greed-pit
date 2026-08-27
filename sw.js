@@ -1,4 +1,4 @@
-const CACHE='greed-pit-0.20.4';
+const CACHE='greed-pit-0.20.5';
 const CORE=['./','./index.html','./manifest.webmanifest'];
 self.addEventListener('install',event=>{
   event.waitUntil(
