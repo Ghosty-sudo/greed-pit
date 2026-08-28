@@ -4,15 +4,17 @@
 
 GREED PIT is a mobile-first portrait survival game built around escalating enemy pressure, GREED contracts, movement, and the decision to cash out or push deeper.
 
-**Play the current GitHub Pages build:** https://ghosty-sudo.github.io/greed-pit/
+**Play:** https://ghosty-sudo.github.io/greed-pit/
 
-## 0.20.5 highlights
-- Added telegraphed **PIT ZONES** beginning after the opening minute. A zone snapshots the player's area, glows for about 1.65 seconds, then erupts. Staying inside costs meaningful HP; moving out avoids all zone damage.
-- Hazard waves intensify from one zone to multiple simultaneous zones as the run gets deeper, with a protected cadence floor so warnings remain readable.
-- Enemy HP now ramps sooner from both time alive and enemies killed, specifically targeting the 2–5 minute section that was becoming too easy.
-- XP requirements now rise more sharply as level increases, while the first few levels remain quick enough to establish a build.
-- Vacuum remains capped at 190 so XP collection still requires movement.
-- 0.20.4 safeguards remain: GREED offer caching, BAD INVESTMENT XP cap, XP-orb merging, damage/deep-run limits, level/Cycle sequencing protection, and the 600-particle mobile ceiling.
-- The page now explicitly links its web manifest and registers the versioned network-first service worker.
+## 0.20.5
+- Telegraphed PIT ZONES begin after the opening portion of the run. Move out before they erupt or take a meaningful HP hit.
+- Hazard waves escalate from one zone to several simultaneous zones as the run continues.
+- Enemy HP pressure ramps earlier from both time alive and enemies killed.
+- XP requirements rise more sharply with level so late upgrades do not arrive nearly as quickly as early upgrades.
+- Vacuum remains capped at 190 so collecting XP still requires movement.
+- 0.20.4 hardening remains: GREED offer caching, BAD INVESTMENT XP cap, XP-orb merging, numeric safety limits, and mobile particle caps.
 
-The canonical release source is `index.html`. `sw.js` and `manifest.webmanifest` support browser/PWA deployment, and `GREED_PIT_BROWSER_GAME.zip` packages the current release files.
+## GitHub Pages layout
+The canonical human-readable 0.20.5 source is stored with the GREED PIT project artifacts. GitHub Pages uses `index.html` + `loader.js` + `game.01.b64` through `game.13.b64`. The chunk files concatenate to the Base64 representation of the gzip-compressed canonical HTML; the loader reconstructs and decompresses it in-browser before starting the game.
+
+The old repository browser ZIP is removed during this release so an outdated package cannot be mistaken for the current build. The complete 0.20.5 browser release remains stored with the canonical project artifacts.
