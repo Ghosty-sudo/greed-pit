@@ -1,5 +1,5 @@
-const CACHE='greed-pit-0.20.6';
-const CORE=["./", "./index.html", "./loader-0206.js", "./gp0206.01.b64", "./gp0206.02.b64", "./gp0206.03.b64", "./gp0206.04.b64", "./gp0206.05.b64", "./manifest.webmanifest"];
+const CACHE='greed-pit-0.20.7';
+const CORE=["./","./index.html","./loader-0207.js","./gp0207.01.b64","./gp0207.02.b64","./gp0207.03.b64","./gp0207.04.b64","./gp0207.05.b64","./gp0207.06.b64","./manifest.webmanifest"];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('greed-pit-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;event.respondWith(fetch(event.request).then(response=>{if(response&&response.ok&&event.request.url.startsWith(self.location.origin)){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy))}return response}).catch(()=>caches.match(event.request).then(cached=>cached||(event.request.mode==='navigate'?caches.match('./index.html'):Response.error()))))});
