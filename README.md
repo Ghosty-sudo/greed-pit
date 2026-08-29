@@ -1,21 +1,22 @@
 # GREED PIT
 
-**Current playtest build:** 0.20.7 — Visual Update
+**Current playtest build:** 0.20.8 — Release Polish
 
 **Play:** https://ghosty-sudo.github.io/greed-pit/
 
-## 0.20.7
-- Approved generated GREED PIT character art is now used in live gameplay for Player, Chaser, Brute, Collector, and Tax Collector.
-- Characters turn between front / 3-4 / side / back views. Player facing follows movement; enemies face their chase direction.
-- Elite and Debt enemies retain orange/gold aura cues for readability.
-- Existing player skins now tint the aura around the new player model.
-- Joystick indicator is smaller and more transparent.
-- The post-level-8 XP growth term is **100x stronger** than 0.20.6, preserving quick early levels but sharply slowing mass-level chains once a build starts clearing quickly.
-- Bad Ideas, Current Build inspection, PIT ZONES, GREED contracts, extraction Cycles, and prior hardening remain.
+## 0.20.8
+Content is frozen for this polish phase. This build focuses on making the existing game feel release-ready rather than adding new systems.
 
-Canonical source SHA-256: `f3263073afe3f8b03cee80eaa340b669e2de9505307d085d450dfb139bced07c`.
+- Replaces the 0.20.7 cropped concept-art atlas with a clean transparent sprite system pre-rendered at startup.
+- Player, Chaser, Brute, Collector, Tax Collector, and Debt enemies now use consistent ground anchors and scale.
+- Four-direction facing uses hysteresis and short crossfades so diagonal movement no longer flickers between poses.
+- Characters use four-frame movement loops plus slower idle animation for an animated feel without expensive per-frame vector drawing.
+- Player skins now color sprite accents/eyes and a faint ground glow instead of placing a hard ring around the player.
+- Elite and Debt readability no longer relies on a circular background sticker; silhouettes, palette, size, and HP bars carry the distinction.
+- Shadows, hit feedback, XP orbs, bullets, and health pickups received lightweight presentation polish.
+- Existing gameplay, GREED contracts, BAD IDEAS, Cycle economy, difficulty hardening, and the 0.20.7 late-XP scaling are preserved.
 
-The generated character atlas is embedded directly inside the canonical game payload so the live build does not depend on separate image-file requests.
+Canonical source SHA-256: `ad5a334fa83d0406aa81ad390acae74b85ce73d2e1a4c53e885e82775d43d329`.
 
-## GitHub Pages layout
-The live `index.html` is a tiny shell that imports `loader-0207.js`. The loader reconstructs the exact embedded-atlas 0.20.7 gameplay source from `gp0207.01.b64` through `gp0207.06.b64`.
+## Deployment
+The live `index.html` is a tiny shell that imports `loader-0208.js`. The loader fetches five version-specific Base64 text chunks, `gp0208.01.b64` through `gp0208.05.b64`, decodes them into one gzip byte stream, and reconstructs the exact canonical game with the browser's gzip `DecompressionStream`. Jarvis must write these `.b64` files using **Payload Mode: Body Text** so their Base64 text is preserved exactly.
