@@ -1,22 +1,20 @@
 # GREED PIT
 
-**Current playtest build:** 0.20.8 — Release Polish
+**Current playtest build:** 0.20.9 — Release Candidate
 
 **Play:** https://ghosty-sudo.github.io/greed-pit/
 
-## 0.20.8
-Content is frozen for this polish phase. This build focuses on making the existing game feel release-ready rather than adding new systems.
+## 0.20.9
+Content remains frozen. This is a release-candidate polish build based on 0.20.8.
 
-- Replaces the 0.20.7 cropped concept-art atlas with a clean transparent sprite system pre-rendered at startup.
-- Player, Chaser, Brute, Collector, Tax Collector, and Debt enemies now use consistent ground anchors and scale.
-- Four-direction facing uses hysteresis and short crossfades so diagonal movement no longer flickers between poses.
-- Characters use four-frame movement loops plus slower idle animation for an animated feel without expensive per-frame vector drawing.
-- Player skins now color sprite accents/eyes and a faint ground glow instead of placing a hard ring around the player.
-- Elite and Debt readability no longer relies on a circular background sticker; silhouettes, palette, size, and HP bars carry the distinction.
-- Shadows, hit feedback, XP orbs, bullets, and health pickups received lightweight presentation polish.
-- Existing gameplay, GREED contracts, BAD IDEAS, Cycle economy, difficulty hardening, and the 0.20.7 late-XP scaling are preserved.
+- Keeps the 0.20.8 transparent pre-rendered sprite system, consistent anchors/scaling, four-frame movement loops, idle motion, facing hysteresis/crossfades, skin accents, and combat presentation polish.
+- Fixes the attack-speed timing path used by **FASTER BAD IDEAS**, **TURBO HEART**, and **BAD CREDIT**.
+- Attack-speed upgrades now rescale the remaining shot cooldown immediately instead of inheriting the old slower interval.
+- The firing clock stays primed when there are no enemies, so the player does not wait on a stale cooldown when a target appears.
+- A bounded cadence scheduler now handles shot timing consistently through the 12 attacks/second cap and is covered by automated self-tests.
+- Existing gameplay, GREED contracts, BAD IDEAS, Cycle economy, difficulty hardening, and late-XP scaling are unchanged.
 
-Canonical source SHA-256: `ad5a334fa83d0406aa81ad390acae74b85ce73d2e1a4c53e885e82775d43d329`.
+Canonical source SHA-256: `ed73fd1a4e4e8cf0c442d6c89ed0864a0d38aec9bb99bf91c41c30679a60302d`.
 
 ## Deployment
-The live `index.html` is a tiny shell that imports `loader-0208.js`. The loader fetches five version-specific Base64 text chunks, `gp0208.01.b64` through `gp0208.05.b64`, decodes them into one gzip byte stream, and reconstructs the exact canonical game with the browser's gzip `DecompressionStream`. Jarvis must write these `.b64` files using **Payload Mode: Body Text** so their Base64 text is preserved exactly.
+The live `index.html` is a tiny shell that imports `loader-0209.js`. To minimize release risk, the 0.20.9 loader reuses the already-verified 0.20.8 payload chunks, applies a deterministic attack-speed/version patch in memory, verifies the exact 0.20.9 SHA-256, and then opens the game. No new gameplay payload chunks are required for this release candidate.
