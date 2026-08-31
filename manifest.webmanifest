@@ -3,8 +3,8 @@
   "short_name": "GREED PIT",
   "start_url": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#09090d",
   "theme_color": "#09090d",
-  "orientation": "portrait",
-  "description": "GREED PIT 0.20.9 — release candidate with polished animated-feel sprites and corrected attack-speed timing."
+  "description": "GREED PIT 0.20.10 \u2014 release-candidate visual consistency polish with sprite-backed skin previews."
 }
