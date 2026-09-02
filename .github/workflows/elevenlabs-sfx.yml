@@ -1,0 +1,191 @@
+name: Generate ElevenLabs SFX
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".audio-requests/pending/*.json"
+  workflow_dispatch:
+    inputs:
+      request_file:
+        description: "Optional pending request JSON path"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: elevenlabs-sfx-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Verify ElevenLabs secret exists
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          if [ -z "$ELEVENLABS_API_KEY" ]; then
+            echo "ELEVENLABS_API_KEY is not configured."
+            exit 1
+          fi
+
+      - name: Find requests
+        id: requests
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REQUEST_FILE: ${{ inputs.request_file }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          : > /tmp/audio_requests.txt
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "${REQUEST_FILE:-}" ]; then
+            printf '%s\n' "$REQUEST_FILE" >> /tmp/audio_requests.txt
+          elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            find .audio-requests/pending -maxdepth 1 -type f -name '*.json' -print 2>/dev/null \
+              | sed 's#^\\/##' | sort > /tmp/audio_requests.txt || true
+          else
+            if [ -n "${BEFORE_SHA:-}" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+              git diff --name-only --diff-filter=AM "$BEFORE_SHA" "$AFTER_SHA" -- '.audio-requests/pending/*.json' \
+                > /tmp/audio_requests.txt
+            else
+              git show --pretty='' --name-only "$AFTER_SHA" -- '.audio-requests/pending/*.json' \
+                > /tmp/audio_requests.txt
+            fi
+          fi
+
+          sed -i '/^[[:space:]]*$/d' /tmp/audio_requests.txt
+          echo "Requests:"
+          cat /tmp/audio_requests.txt || true
+
+          if [ ! -s /tmp/audio_requests.txt ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate requested sound effects
+        if: steps.requests.outputs.found == 'true'
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          while IFS= read -r request; do
+            echo "Processing $request"
+
+            python3 - "$request" /tmp/elevenlabs_payload.json /tmp/audio_output_path.txt <<'PY'
+          import json
+          import pathlib
+          import re
+          import sys
+
+          request_path, payload_path, output_path_file = sys.argv[1:4]
+
+          with open(request_path, "r", encoding="utf-8") handle:
+            request = json.load(handle)
+
+          name = request.get("name")
+          text = request.get("text")
+          duration = request.get("duration_seconds")
+          loop = request.get("loop", False)
+          influence = request.get("prompt_influence", 0.3)
+          output_path = request.get("output_path") or f"assets/audio/sfx/{name}.mp3"
+
+          if not isinstance(name, str) or not re.fullmatch(r[a-z0-9][a-z0-9_-]#{0,63}", name):
+              raise SystemExit("name must use lowercase letters, numbers, _ or - and be at most 64 characters")
+
+          if not isinstance(text, str) or not (1 <= len(text) <= 450):
+            raise SystemExit("text must be 1-450 characters")
+
+          if duration is not None:
+            if not isinstance(duration, (int, float)) or not (0.5 <= float(duration) <= 30):
+              raise SystemExit("duration_seconds must be between 0.5 and 30")
+
+          if not isinstance(loop, bool):
+            raise SystemExit("loop must be true or false")
+
+          if not isinstance(influence, (int, float)) or not (0 <= float(influence) <= 1):
+            raise SystemExit("prompt_influence must be between 0 and 1")
+
+          normalized = pathlib.PurePosixPath(output_path)
+          if normalized.is_absolute() or ".." in normalized.parts:
+            raise SystemExit("output_path must be a safe relative repository path")
+          if not str(normalized).startswith("assets/audio/") or normalized.suffix.lower() != ".mp3":
+            raise SystemExit("output_path must be an .mp3 file under assets/audio/")
+
+          payload = {
+              "text": text,
+              "loop": loop,
+              "prompt_influence": float(influence),
+              "model_id": "eleven_text_to_sound_v2",
+          }
+          if duration is not None:
+            payload["duration_seconds"] = float(duration)
+
+          with open(payload_path, "w", encoding="utf-8") as handle:
+              json.dump(payload, handle)
+
+          with open(output_path_file, "w", encoding="utf-8") as handle:
+              handle.write(str(normalized))
+          PY
+
+            output_path="$(cat /tmp/audio_output_path.txt)"
+            mkdir -p "$(dirname "$output_path")"
+
+            http_code="$(
+              curl --silent --show-error \
+                --output /tmp/elevenlabs_response.bin \
+                --write-out '%{http_code}' \
+                --request POST \
+                --url 'https://api.elevenlabs.io/v1/sound-generation?output_format=mp3_44100_128' \
+                --header "xi-api-key: $ELEVENLABS_API_KEY" \
+                --header 'Content-Type: application/json' \
+                --data-binary '@/tmp/elevenlabs_payload.json'
+            )"
+
+            if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+              echo "ElevenLabs request failed with HTTP $http_code."
+              python3 - <<'PY'
+          from pathlib import Path
+          data = Path("/tmp/elevenlabs_response.bin").read_bytes()
+          try:
+              print(data.decode("utf-8")[:2000])
+          except UnicodeDecodeError:
+            print("Response was not UTF-8 text.")
+          PY
+              exit 1
+            fi
+
+            mv /tmp/elevenlabs_response.bin "$output_path"
+
+            processed=".audio-requests/processed/$(basename "$request")"
+            mkdir -p "$(dirname "$processed")"
+            mv "$request" "$processed"
+
+            echo "Generated $output_path"
+          done < /tmp/audio_requests.txt
+
+      - name: Commit generated audio
+        if: steps.requests.outputs.found == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "greed-pit-audio-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/audio .audio-requests
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+            exit 0
+          fi
+          git commit -m "audio: generate ElevenLabs sound effects"
+          git push
