@@ -1,2 +1,8 @@
 {
+  "name": "connection_test",
+  "text": "Very short dark arcade confirmation chime, crisp metallic click with a faint sinister magical tail, no voice, no music.",
+  "duration_seconds": 1.0,
+  "loop": false,
+  "prompt_influence": 0.4,
+  "output_path": "assets/audio/sfx/connection_test.mp3"
 }
