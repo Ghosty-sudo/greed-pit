@@ -1,0 +1,8 @@
+{
+  "name": "enemy_death",
+  "text": "Very short enemy death sound for a fast dark arcade survival game: compact crunchy energy collapse with a soft low impact, satisfying but lightweight, no gore, no voice, no music, designed to repeat often in dense combat.",
+  "duration_seconds": 0.55,
+  "loop": false,
+  "prompt_influence": 0.5,
+  "output_path": "assets/audio/sfx/enemy_death.mp3"
+}
