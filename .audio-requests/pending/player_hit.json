@@ -1,0 +1,8 @@
+{
+  "name": "player_hit",
+  "text": "Very short player damage sound for a dark mobile survival game: sharp low thud with a brief distorted impact crack, immediately readable as taking damage, not gory, no voice, no music.",
+  "duration_seconds": 0.5,
+  "loop": false,
+  "prompt_influence": 0.5,
+  "output_path": "assets/audio/sfx/player_hit.mp3"
+}
