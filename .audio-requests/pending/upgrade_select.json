@@ -1,0 +1,8 @@
+{
+  "name": "upgrade_select",
+  "text": "Short satisfying upgrade selection sound for a dark arcade survival game: compact rising energy pulse ending in a confident metallic confirmation snap, rewarding but not cheerful, no voice, no music.",
+  "duration_seconds": 0.8,
+  "loop": false,
+  "prompt_influence": 0.5,
+  "output_path": "assets/audio/sfx/upgrade_select.mp3"
+}
