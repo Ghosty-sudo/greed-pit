@@ -1,0 +1,8 @@
+{
+  "name": "xp_pickup",
+  "text": "Very short satisfying XP pickup sound for a dark mobile arcade survival game: crisp bright energy tick with a tiny metallic-glass sparkle, clean, subtle, no voice, no music, designed for very frequent repetition without becoming annoying.",
+  "duration_seconds": 0.5,
+  "loop": false,
+  "prompt_influence": 0.5,
+  "output_path": "assets/audio/sfx/xp_pickup.mp3"
+}
