@@ -1,0 +1,8 @@
+{
+  "name": "boss_arrival",
+  "text": "Boss arrival warning for a dark arcade survival game: ominous low sub-bass rise into a heavy metallic impact and brief threatening distorted tail, unmistakable major threat cue, no voice, no music.",
+  "duration_seconds": 1.8,
+  "loop": false,
+  "prompt_influence": 0.5,
+  "output_path": "assets/audio/sfx/boss_arrival.mp3"
+}
