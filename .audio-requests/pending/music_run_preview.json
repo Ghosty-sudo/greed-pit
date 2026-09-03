@@ -1,0 +1,8 @@
+{
+  "name": "music_run_preview",
+  "text": "Seamless dark arcade survival-game background loop, tense but restrained, pulsing low electronic rhythm, subtle industrial texture, ominous atmosphere, no vocals, no melody that becomes annoying, designed to sit quietly under constant combat.",
+  "duration_seconds": 30.0,
+  "loop": true,
+  "prompt_influence": 0.45,
+  "output_path": "assets/audio/music/music_run_preview.mp3"
+}
