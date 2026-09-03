@@ -1,0 +1,44 @@
+name: Export GREED PIT canonical source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/export-greed-pit-source.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct and verify 0.20.10 source
+        run: |
+          set -euo pipefail
+          mkdir -p src
+          cat gp0210.01.b64 gp0210.02.b64 gp0210.03.b64 gp0210.04.b64 gp0210.05.b64             | tr -d '[:space:]' | base64 -d | gzip -dc > src/greed-pit-0.20.10.html
+          actual="$(sha256sum src/greed-pit-0.20.10.html | awk '{print $1}')"
+          expected="2878c02aa0da57390d8d4355b9a9c1e6fc150d14aae479b660c2592998eb022a"
+          test "$actual" = "$expected" || {
+            echo "Source hash mismatch: $actual"
+            exit 1
+          }
+          grep -q "GREED PIT 0.20.10 RELEASE CANDIDATE" src/greed-pit-0.20.10.html
+
+      - name: Commit canonical source
+        run: |
+          set -euo pipefail
+          git config user.name "greed-pit-build-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/greed-pit-0.20.10.html
+          if git diff --cached --quiet; then
+            echo "Source already exported."
+            exit 0
+          fi
+          git commit -m "build: export GREED PIT 0.20.10 canonical source"
+          git push
