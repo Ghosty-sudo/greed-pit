@@ -1,0 +1,8 @@
+{
+  "name": "circle_crash_explosion",
+  "text": "Punchy Circle Crash explosion for a dark arcade survival game: compact circular energy detonation with a deep bass hit, expanding shockwave, gritty electrical crackle, powerful but short, no voice, no music.",
+  "duration_seconds": 1.0,
+  "loop": false,
+  "prompt_influence": 0.55,
+  "output_path": "assets/audio/sfx/circle_crash_explosion.mp3"
+}
