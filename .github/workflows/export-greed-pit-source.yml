@@ -21,7 +21,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p src
-          cat gp0210.01.b64 gp0210.02.b64 gp0210.03.b64 gp0210.04.b64 gp0210.05.b64             | tr -d '[:space:]' | base64 -d | gzip -dc > src/greed-pit-0.20.10.html
+          rm -f /tmp/gp0210.gz
+          for part in gp0210.01.b64 gp0210.02.b64 gp0210.03.b64 gp0210.04.b64 gp0210.05.b64; do
+            tr -d '[:space:]' < "$part" | base64 -d >> /tmp/gp0210.gz
+          done
+          gzip -dc /tmp/gp0210.gz > src/greed-pit-0.20.10.html
           actual="$(sha256sum src/greed-pit-0.20.10.html | awk '{print $1}')"
           expected="2878c02aa0da57390d8d4355b9a9c1e6fc150d14aae479b660c2592998eb022a"
           test "$actual" = "$expected" || {
