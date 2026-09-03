@@ -1,0 +1,8 @@
+{
+  "name": "player_death",
+  "text": "Short player death and run-over sting for a dark arcade survival game: heavy impact followed by a collapsing distorted low tone and brief hollow tail, final and disappointing without being melodramatic, no voice, no music.",
+  "duration_seconds": 1.8,
+  "loop": false,
+  "prompt_influence": 0.5,
+  "output_path": "assets/audio/sfx/player_death.mp3"
+}
