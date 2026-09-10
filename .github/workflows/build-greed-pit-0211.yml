@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/build-greed-pit-0211.yml"
+      - "tools/build_greed_pit_0211.py"
   workflow_dispatch:
 
 permissions:
@@ -18,144 +19,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Verify source and audio inputs
-        run: |
-          set -euo pipefail
-          test -f src/greed-pit-0.20.9.html
-          echo "ed73fd1a4e4e8cf0c442d6c89ed0864a0d38aec9bb99bf91c41c30679a60302d  src/greed-pit-0.20.9.html" | sha256sum -c -
-          for f in \
-            assets/audio/music/music_run_preview.mp3 \
-            assets/audio/sfx/xp_pickup.mp3 \
-            assets/audio/sfx/upgrade_select.mp3 \
-            assets/audio/sfx/greed_contract.mp3 \
-            assets/audio/sfx/enemy_death.mp3 \
-            assets/audio/sfx/player_hit.mp3 \
-            assets/audio/sfx/circle_crash_explosion.mp3 \
-            assets/audio/sfx/boss_arrival.mp3 \
-            assets/audio/sfx/cycle_checkpoint.mp3 \
-            assets/audio/sfx/player_death.mp3; do test -s "$f"; done
+      - name: Build candidate from verified source
+        run: python3 tools/build_greed_pit_0211.py
 
-      - name: Patch verified source into 0.20.11
-        run: |
-          set -euo pipefail
-          python3 <<'PY'
-          from pathlib import Path
-          src = Path('src/greed-pit-0.20.9.html').read_text()
+      - name: Check generated game JavaScript
+        run: node --check /tmp/greed-pit-0211.js
 
-          def r(old, new, label):
-              global src
-              n = src.count(old)
-              if n != 1:
-                  raise SystemExit(f'{label}: expected exactly one match, found {n}')
-              src = src.replace(old, new, 1)
-
-          r('<title>GREED PIT 0.20.9 RELEASE CANDIDATE</title>', '<title>GREED PIT 0.20.11 AUDIO CANDIDATE</title>', 'title')
-          r('Prototype 0.20.6 — Bad Ideas catalog, tappable build details, visible stack caps, and maxed upgrades leave the roll pool.', 'Candidate 0.20.11 — verified 0.20.9 gameplay baseline plus integrated music/SFX and persistent audio controls.', 'title metadata')
-          r('<button class="secondary" id="feedbackOpen">FEEDBACK / BUG REPORT</button>', '<button class="secondary" id="audioToggle">AUDIO: ON</button><button class="secondary" id="feedbackOpen">FEEDBACK / BUG REPORT</button>', 'audio button')
-          r("meta={scrap:meta.scrap||0,unlocked:meta.unlocked||0,best:meta.best||0,totalKills:meta.totalKills||0,totalSeconds:meta.totalSeconds||0,maxGreed:meta.maxGreed||0,maxLevel:meta.maxLevel||1,skin:meta.skin||'pit',tutorialSeen:!!meta.tutorialSeen};", "meta={scrap:meta.scrap||0,unlocked:meta.unlocked||0,best:meta.best||0,totalKills:meta.totalKills||0,totalSeconds:meta.totalSeconds||0,maxGreed:meta.maxGreed||0,maxLevel:meta.maxLevel||1,skin:meta.skin||'pit',tutorialSeen:!!meta.tutorialSeen,audio:meta.audio!==false};", 'audio meta')
-
-          audio = r'''
-const AUDIO={
- music:'./assets/audio/music/music_run_preview.mp3',
- xp:'./assets/audio/sfx/xp_pickup.mp3',upgrade:'./assets/audio/sfx/upgrade_select.mp3',greed:'./assets/audio/sfx/greed_contract.mp3',enemy:'./assets/audio/sfx/enemy_death.mp3',hit:'./assets/audio/sfx/player_hit.mp3',blast:'./assets/audio/sfx/circle_crash_explosion.mp3',boss:'./assets/audio/sfx/boss_arrival.mp3',cycle:'./assets/audio/sfx/cycle_checkpoint.mp3',death:'./assets/audio/sfx/player_death.mp3'
-};
-const runMusic=new Audio(AUDIO.music);runMusic.loop=true;runMusic.preload='auto';runMusic.volume=.22;
-const audioLast={};
-function playSfx(key,volume=.45,minGap=0){if(!meta.audio||!AUDIO[key])return;const now=performance.now();if(now-(audioLast[key]??-1e9)<minGap)return;audioLast[key]=now;const a=new Audio(AUDIO[key]);a.preload='auto';a.volume=clamp(volume,0,1);a.play().catch(()=>{})}
-function resumeMusic(){if(!meta.audio)return;runMusic.volume=.22;runMusic.play().catch(()=>{})}
-function pauseMusic(){runMusic.pause()}
-function stopMusic(){runMusic.pause();try{runMusic.currentTime=0}catch(e){}}
-function updateAudioButton(){const b=$('#audioToggle');if(b)b.textContent=meta.audio?'AUDIO: ON':'AUDIO: OFF'}
-function setAudio(enabled){meta.audio=!!enabled;saveMeta();updateAudioButton();if(!meta.audio)stopMusic();else if(state==='playing'&&!g?.paused)resumeMusic()}
-'''
-          r("function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}addEventListener('resize',resize);resize();", audio + "\nfunction resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}addEventListener('resize',resize);resize();updateAudioButton();", 'audio engine')
-
-          r("toast(u.curse?'TERRIBLE CHOICE 👍':'UPGRADE ACQUIRED');finishLevelChoice()", "playSfx('upgrade',.52,80);toast(u.curse?'TERRIBLE CHOICE 👍':'UPGRADE ACQUIRED');finishLevelChoice()", 'upgrade sfx')
-          r("g.greed++;g.rerolls++;c.apply(g.player,g.mods);g.contracts.push(c.name);", "g.greed++;g.rerolls++;c.apply(g.player,g.mods);g.contracts.push(c.name);playSfx('greed',.65,120);", 'greed sfx')
-          r("function killEnemy(e){g.kills++;", "function killEnemy(e){g.kills++;playSfx('enemy',e.boss?.72:e.elite?.46:.28,95);", 'enemy death sfx')
-          r("h.detonated=true;g.shake=Math.max(g.shake,10);", "h.detonated=true;g.shake=Math.max(g.shake,10);playSfx('blast',.58,180);", 'blast sfx')
-          r("if(hitPlayer){g.player.hp-=e.damage*dt*1.75;g.shake=Math.max(g.shake,3)}", "if(hitPlayer){g.player.hp-=e.damage*dt*1.75;g.shake=Math.max(g.shake,3);playSfx('hit',.34,420)}", 'hit sfx')
-          r("if(d<g.player.r+o.r+5){o.dead=1;gainXp(o.xp)}", "if(d<g.player.r+o.r+5){o.dead=1;playSfx('xp',.20,70);gainXp(o.xp)}", 'xp sfx')
-          r("if(g.t>=g.nextBossAt){g.bossSpawned++;if(g.enemies.length<enemyCap()+3)spawnEnemy(true);g.nextBossAt=g.t+bossEvery;toast('TAX COLLECTOR INBOUND')}", "if(g.t>=g.nextBossAt){g.bossSpawned++;if(g.enemies.length<enemyCap()+3)spawnEnemy(true);g.nextBossAt=g.t+bossEvery;playSfx('boss',.72,1200);toast('TAX COLLECTOR INBOUND')}", 'boss sfx')
-          r("function completeCycle(){\n g.cyclePending=true;", "function completeCycle(){\n playSfx('cycle',.70,800);g.cyclePending=true;", 'cycle sfx')
-          r("function die(){state='dead';", "function die(){playSfx('death',.78,800);stopMusic();state='dead';", 'death sfx')
-          r("function cashOutRun(){\n const bank=haulValue();", "function cashOutRun(){\n stopMusic();const bank=haulValue();", 'cashout music')
-          r("function pauseGame(){if(state!=='playing')return;state='paused';", "function pauseGame(){if(state!=='playing')return;pauseMusic();state='paused';", 'pause music')
-          r("function resumeGame(){if(state!=='paused')return;$('#pause').classList.add('hidden');g.paused=false;state='playing';", "function resumeGame(){if(state!=='paused')return;$('#pause').classList.add('hidden');g.paused=false;state='playing';resumeMusic();", 'resume music')
-          r("state='playing';ui.title.classList.add('hidden');ui.death.classList.add('hidden');ui.level.classList.add('hidden');$('#abilityBox').classList.add('hidden');ui.hud.classList.remove('hidden');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}", "state='playing';ui.title.classList.add('hidden');ui.death.classList.add('hidden');ui.level.classList.add('hidden');$('#abilityBox').classList.add('hidden');ui.hud.classList.remove('hidden');resumeMusic();last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}", 'start music')
-          r("$('#feedbackOpen').onclick=showFeedback;", "$('#audioToggle').onclick=()=>setAudio(!meta.audio);$('#feedbackOpen').onclick=showFeedback;", 'audio toggle handler')
-          r("state='title';cancelAnimationFrame(raf);\n $('#pause').classList.add('hidden');", "state='title';cancelAnimationFrame(raf);stopMusic();\n $('#pause').classList.add('hidden');", 'quit music')
-          r("$('#home').onclick=()=>{state='title';", "$('#home').onclick=()=>{stopMusic();state='title';", 'home music')
-          r("build:'0.20.9'", "build:'0.20.11'", 'feedback build')
-          r("ok('release sprite system exists',typeof makeSprite==='function'&&typeof updateFacing==='function'&&SPRITE_FRAMES===4)", "ok('release sprite system exists',typeof makeSprite==='function'&&typeof updateFacing==='function'&&SPRITE_FRAMES===4);ok('audio system exists',typeof playSfx==='function'&&typeof resumeMusic==='function'&&!!AUDIO.death)", 'audio self test')
-
-          Path('src/greed-pit-0.20.11.html').write_text(src)
-          PY
-
-      - name: Syntax and integration checks
-        run: |
-          set -euo pipefail
-          python3 <<'PY'
-          from pathlib import Path
-          import re
-          h=Path('src/greed-pit-0.20.11.html').read_text()
-          scripts=re.findall(r'<script>(.*?)</script>',h,re.S)
-          if len(scripts)!=1: raise SystemExit(f'expected one inline script, found {len(scripts)}')
-          Path('/tmp/greed-pit-0211.js').write_text(scripts[0])
-          required=['GREED PIT 0.20.11 AUDIO CANDIDATE','AUDIO: ON','music_run_preview.mp3','player_death.mp3',"build:'0.20.11'","ok('audio system exists'"]
-          for item in required:
-              if item not in h: raise SystemExit(f'missing integration marker: {item}')
-          PY
-          node --check /tmp/greed-pit-0211.js
-
-      - name: Build deterministic compressed payload and loader
-        run: |
-          set -euo pipefail
-          rm -f gp0211.*.b64 loader-0211.js manifest-0211.webmanifest sw-0211.js
-          hash="$(sha256sum src/greed-pit-0.20.11.html | awk '{print $1}')"
-          gzip -9 -n -c src/greed-pit-0.20.11.html > /tmp/gp0211.gz
-          base64 -w0 /tmp/gp0211.gz > /tmp/gp0211.b64
-          split -b 8000 -d -a 2 /tmp/gp0211.b64 /tmp/gp0211.part.
-          i=1
-          names=""
-          for f in /tmp/gp0211.part.*; do
-            out="gp0211.$(printf '%02d' "$i").b64"
-            cp "$f" "$out"
-            [ -n "$names" ] && names="$names,"
-            names="$names\"$out\""
-            i=$((i+1))
-          done
-          cat > loader-0211.js <<EOF
-          (async()=>{try{if(typeof DecompressionStream!=='function')throw new Error('This browser needs gzip stream support.');const names=[$names],texts=await Promise.all(names.map(async n=>{const r=await fetch('./'+n,{cache:'no-store'});if(!r.ok)throw new Error(n+' '+r.status);return(await r.text()).replace(/\\s+/g,'')})),parts=texts.map(s=>{const raw=atob(s),a=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i);return a}),total=parts.reduce((n,a)=>n+a.length,0),z=new Uint8Array(total);let o=0;for(const a of parts){z.set(a,o);o+=a.length}const h=await new Response(new Blob([z]).stream().pipeThrough(new DecompressionStream('gzip'))).text();if(!h.includes('GREED PIT 0.20.11 AUDIO CANDIDATE'))throw new Error('Build marker verification failed.');if(globalThis.crypto?.subtle){const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(h)),hex=[...new Uint8Array(d)].map(x=>x.toString(16).padStart(2,'0')).join('');if(hex!=='$hash')throw new Error('Build hash verification failed.')}document.open();document.write(h);document.close()}catch(e){document.body.innerHTML='<main style="font-family:system-ui;padding:24px;background:#09090d;color:#f7f2df;min-height:100vh"><h1>THE PIT FAILED TO OPEN</h1><p>'+String(e.message||e)+'</p></main>';console.error(e)}})()
-          EOF
-          cat > manifest-0211.webmanifest <<'EOF'
-          {
-            "name": "GREED PIT",
-            "short_name": "GREED PIT",
-            "start_url": "./",
-            "display": "standalone",
-            "background_color": "#09090d",
-            "theme_color": "#09090d",
-            "orientation": "portrait",
-            "description": "GREED PIT 0.20.11 — verified release-candidate baseline with integrated music and sound effects."
-          }
-          EOF
-          printf "const CACHE='greed-pit-0.20.11';\nconst CORE=['./','./index.html','./loader-0211.js','./manifest.webmanifest'];\nself.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).catch(()=>{}))});\nself.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});\nself.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.origin!==location.origin)return;e.respondWith(fetch(e.request,{cache:'no-store'}).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy)).catch(()=>{});return r}).catch(()=>caches.match(e.request).then(r=>r||caches.match('./index.html'))))});\n" > sw-0211.js
-          echo "$hash" > src/greed-pit-0.20.11.sha256
-
-      - name: Verify packaged candidate reconstructs exactly
-        run: |
-          set -euo pipefail
-          cat gp0211.*.b64 | tr -d '[:space:]' | base64 -d > /tmp/check.gz
-          gzip -dc /tmp/check.gz > /tmp/check.html
-          cmp /tmp/check.html src/greed-pit-0.20.11.html
-          expected="$(cat src/greed-pit-0.20.11.sha256)"
-          actual="$(sha256sum /tmp/check.html | awk '{print $1}')"
-          test "$actual" = "$expected"
-          grep -q "GREED PIT 0.20.11 AUDIO CANDIDATE" /tmp/check.html
-          echo "0.20.11 packaged candidate verified: $actual"
-
-      - name: Commit staged 0.20.11 candidate
+      - name: Commit staged candidate
         run: |
           set -euo pipefail
           git config user.name "greed-pit-build-bot"
