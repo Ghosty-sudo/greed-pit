@@ -1,0 +1,62 @@
+name: Build GREED PIT 0.20.12 mobile resume candidate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-greed-pit-0212.yml"
+      - "tools/build_greed_pit_0212.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build candidate from validated 0.20.11 source
+        run: python3 tools/build_greed_pit_0212.py
+
+      - name: Check generated game JavaScript
+        run: node --check /tmp/greed-pit-0212.js
+
+      - name: Browser smoke test packaged candidate
+        run: |
+          set -euo pipefail
+          browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$browser" || { echo "No Chrome/Chromium binary on runner"; exit 1; }
+          cat > candidate-0212-smoke.html <<'EOF'
+          <!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script type="module">import './loader-0212.js';</script>
+          EOF
+          python3 -m http.server 8124 --bind 127.0.0.1 >/tmp/greed-pit-0212-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          sleep 1
+          "$browser" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=4000 --dump-dom "http://127.0.0.1:8124/candidate-0212-smoke.html?test=1" >/tmp/greed-pit-0212-test-dom.html 2>/tmp/greed-pit-0212-browser.err
+          grep -q "ALL TESTS PASSED" /tmp/greed-pit-0212-test-dom.html
+          grep -q "run checkpoint system exists" /tmp/greed-pit-0212-test-dom.html
+          "$browser" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=2500 --dump-dom "http://127.0.0.1:8124/candidate-0212-smoke.html" >/tmp/greed-pit-0212-title-dom.html 2>>/tmp/greed-pit-0212-browser.err
+          grep -q "GREED PIT" /tmp/greed-pit-0212-title-dom.html
+          grep -q "AUDIO: ON" /tmp/greed-pit-0212-title-dom.html
+          grep -q "continueRun" /tmp/greed-pit-0212-title-dom.html
+          echo "0.20.12 packaged loader, self-test, title, audio and resume UI smoke tests passed."
+
+      - name: Commit staged candidate
+        run: |
+          set -euo pipefail
+          rm -f candidate-0212-smoke.html
+          printf '%s\n' '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>GREED PIT 0.20.12 Candidate</title><body style="margin:0;background:#09090d;color:#f7f2df"><script type="module">import "./loader-0212.js";</script></body>' > candidate-0212.html
+          git config user.name "greed-pit-build-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/greed-pit-0.20.12.html src/greed-pit-0.20.12.sha256 loader-0212.js gp0212.*.b64 candidate-0212.html
+          if git diff --cached --quiet; then
+            echo "0.20.12 candidate already staged."
+            exit 0
+          fi
+          git commit -m "build: stage GREED PIT 0.20.12 mobile resume candidate"
+          git push
