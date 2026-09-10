@@ -1,0 +1,23 @@
+{
+  "name": "greed-pit",
+  "private": true,
+  "version": "0.20.11",
+  "description": "GREED PIT mobile release wrapper",
+  "scripts": {
+    "native:web": "python3 tools/prepare_native_web.py",
+    "native:sync": "npm run native:web && npx cap sync",
+    "native:android": "npm run native:web && npx cap sync android",
+    "native:ios": "npm run native:web && npx cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
