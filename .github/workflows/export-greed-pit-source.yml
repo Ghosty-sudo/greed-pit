@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/export-greed-pit-source.yml"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -17,32 +18,61 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Reconstruct and verify 0.20.10 source
+      - name: Reconstruct verified 0.20.9 source through its release loader
         run: |
           set -euo pipefail
           mkdir -p src
-          rm -f /tmp/gp0210.gz
-          for part in gp0210.01.b64 gp0210.02.b64 gp0210.03.b64 gp0210.04.b64 gp0210.05.b64; do
-            tr -d '[:space:]' < "$part" | base64 -d >> /tmp/gp0210.gz
-          done
-          gzip -dc /tmp/gp0210.gz > src/greed-pit-0.20.10.html
-          actual="$(sha256sum src/greed-pit-0.20.10.html | awk '{print $1}')"
-          expected="2878c02aa0da57390d8d4355b9a9c1e6fc150d14aae479b660c2592998eb022a"
+          node <<'NODE'
+          const fs = require('fs');
+          const vm = require('vm');
+          const crypto = require('crypto');
+
+          globalThis.crypto = globalThis.crypto || crypto.webcrypto;
+          globalThis.fetch = async (url) => {
+            const file = String(url).replace(/^\.\//, '');
+            if (!fs.existsSync(file)) return new Response('', {status: 404});
+            return new Response(fs.readFileSync(file), {status: 200});
+          };
+
+          let written = false;
+          globalThis.document = {
+            body: {innerHTML: ''},
+            open() {},
+            write(html) {
+              fs.writeFileSync('src/greed-pit-0.20.9.html', html);
+              written = true;
+            },
+            close() {}
+          };
+
+          (async () => {
+            const code = fs.readFileSync('loader-0209.js', 'utf8');
+            await vm.runInThisContext(code, {filename: 'loader-0209.js'});
+            if (!written) throw new Error('0.20.9 loader did not emit canonical source: ' + document.body.innerHTML);
+          })().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE
+
+          actual="$(sha256sum src/greed-pit-0.20.9.html | awk '{print $1}')"
+          expected="ed73fd1a4e4e8cf0c442d6c89ed0864a0d38aec9bb99bf91c41c30679a60302d"
           test "$actual" = "$expected" || {
-            echo "Source hash mismatch: $actual"
+            echo "0.20.9 source hash mismatch: $actual"
             exit 1
           }
-          grep -q "GREED PIT 0.20.10 RELEASE CANDIDATE" src/greed-pit-0.20.10.html
+          grep -q "GREED PIT 0.20.9 RELEASE CANDIDATE" src/greed-pit-0.20.9.html
+          echo "Verified canonical 0.20.9 source: $actual"
 
-      - name: Commit canonical source
+      - name: Commit verified canonical source
         run: |
           set -euo pipefail
           git config user.name "greed-pit-build-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/greed-pit-0.20.10.html
+          git add src/greed-pit-0.20.9.html
           if git diff --cached --quiet; then
-            echo "Source already exported."
+            echo "Verified source already exported."
             exit 0
           fi
-          git commit -m "build: export GREED PIT 0.20.10 canonical source"
+          git commit -m "build: export verified GREED PIT 0.20.9 canonical source"
           git push
