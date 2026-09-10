@@ -1,4 +1,4 @@
-name: Bootstrap and validate GREED PIT native apps
+name: Validate GREED PIT native apps
 
 on:
   push:
@@ -6,52 +6,62 @@ on:
     paths:
       - ".github/workflows/bootstrap-native.yml"
       - "package.json"
+      - "package-lock.json"
       - "capacitor.config.json"
       - "tools/prepare_native_web.py"
       - "src/greed-pit-0.20.13.html"
+      - "assets/audio/**"
+      - "www/**"
+      - "android/**"
+      - "ios/**"
+      - "release/app-store/PrivacyInfo.xcprivacy"
+  pull_request:
+    paths:
+      - ".github/workflows/bootstrap-native.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "capacitor.config.json"
+      - "tools/prepare_native_web.py"
+      - "src/greed-pit-0.20.13.html"
+      - "assets/audio/**"
+      - "www/**"
+      - "android/**"
+      - "ios/**"
+      - "release/app-store/PrivacyInfo.xcprivacy"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: greed-pit-native-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  bootstrap-and-validate:
+  validate-native:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: package-lock.json
-        continue-on-error: true
 
       - name: Install Capacitor toolchain
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Prepare verified native web bundle
         run: npm run native:web
 
-      - name: Create or sync Android project
-        run: |
-          set -euo pipefail
-          if [ -d android ]; then
-            npx cap sync android
-          else
-            npx cap add android
-          fi
+      - name: Sync Android project
+        run: npx cap sync android
 
-      - name: Create or sync iOS project
-        run: |
-          set -euo pipefail
-          if [ -d ios ]; then
-            npx cap sync ios
-          else
-            npx cap add ios
-          fi
+      - name: Sync iOS project
+        run: npx cap sync ios
 
       - name: Verify store-era toolchain and native bundle
         run: |
@@ -64,8 +74,11 @@ jobs:
           grep -Eq 'targetSdkVersion[[:space:]]*=[[:space:]]*36' android/variables.gradle
           grep -q 'GREED PIT 0.20.13 PERFORMANCE CANDIDATE' www/index.html
           grep -q '0.20.13-native-candidate' www/index.html
+          grep -q 'CONTINUE SAVED RUN' www/index.html
+          grep -q 'id="privacyOpen"' www/index.html
           ! grep -q 'navigator.serviceWorker.register' www/index.html
-          echo "Xcode 26+, Android target SDK 36, and GREED PIT 0.20.13 native bundle verified."
+          test -f release/app-store/PrivacyInfo.xcprivacy
+          echo "Xcode 26+, Android target SDK 36, native recovery/privacy markers, and GREED PIT 0.20.13 bundle verified."
 
       - name: Build Android debug application
         run: |
@@ -97,16 +110,11 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             build
 
-      - name: Commit generated native projects
+      - name: Verify checked-in native projects are synchronized
         run: |
           set -euo pipefail
-          git config user.name "greed-pit-build-bot"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json www android ios
-          if git diff --cached --quiet; then
-            echo "Native projects are already synchronized."
-            exit 0
+          if ! git diff --exit-code -- package-lock.json www android ios; then
+            echo "::error::Capacitor/native generated state is stale. Run npm run native:sync and commit the resulting package-lock.json, www/, android/, and ios/ changes."
+            exit 1
           fi
-          git commit -m "build: sync GREED PIT native projects"
-          git pull --rebase origin main
-          git push origin main
+          echo "Checked-in native projects are deterministic and synchronized."
