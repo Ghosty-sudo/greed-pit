@@ -1,4 +1,4 @@
-name: Bootstrap GREED PIT native apps
+name: Bootstrap and validate GREED PIT native apps
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
       - "package.json"
       - "capacitor.config.json"
       - "tools/prepare_native_web.py"
+      - "src/greed-pit-0.20.13.html"
   workflow_dispatch:
 
 permissions:
@@ -52,7 +53,7 @@ jobs:
             npx cap add ios
           fi
 
-      - name: Verify current store-era toolchain targets
+      - name: Verify store-era toolchain and native bundle
         run: |
           set -euo pipefail
           node --version
@@ -61,7 +62,10 @@ jobs:
           xcode_major="$(xcodebuild -version | awk '/Xcode/{split($2,a,"."); print a[1]}')"
           test "$xcode_major" -ge 26
           grep -Eq 'targetSdkVersion[[:space:]]*=[[:space:]]*36' android/variables.gradle
-          echo "Xcode major >= 26 and Android targetSdkVersion 36 verified."
+          grep -q 'GREED PIT 0.20.13 PERFORMANCE CANDIDATE' www/index.html
+          grep -q '0.20.13-native-candidate' www/index.html
+          ! grep -q 'navigator.serviceWorker.register' www/index.html
+          echo "Xcode 26+, Android target SDK 36, and GREED PIT 0.20.13 native bundle verified."
 
       - name: Build Android debug application
         run: |
@@ -80,6 +84,19 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build
 
+      - name: Build iOS Release for generic device unsigned
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -configuration Release \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
       - name: Commit generated native projects
         run: |
           set -euo pipefail
@@ -90,5 +107,6 @@ jobs:
             echo "Native projects are already synchronized."
             exit 0
           fi
-          git commit -m "build: bootstrap GREED PIT iOS and Android projects"
-          git push
+          git commit -m "build: sync GREED PIT native projects"
+          git pull --rebase origin main
+          git push origin main
