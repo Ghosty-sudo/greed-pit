@@ -14,10 +14,18 @@ SOURCE = ROOT / "src/greed-pit-0.20.13.html"
 WWW = ROOT / "www"
 EXPECTED_SHA = "652b45741d3329191e4fc02cca156615ead4343ad615d1dfe36215b67c644aba"
 VERSION = "0.20.13"
+PRIVACY_URL = "https://ghosty-sudo.github.io/greed-pit/privacy.html"
 
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def replace_once(text: str, old: str, new: str, label: str) -> str:
+    count = text.count(old)
+    if count != 1:
+        raise SystemExit(f"{label}: expected one match, found {count}")
+    return text.replace(old, new, 1)
 
 
 def main() -> None:
@@ -39,10 +47,32 @@ def main() -> None:
         raise SystemExit(f"Expected one service-worker registration, found {html.count(sw)}")
     html = html.replace(sw, "// Native Capacitor build intentionally omits PWA service-worker registration.", 1)
 
-    html = html.replace(
+    html = replace_once(
+        html,
         '<meta name="theme-color" content="#09090d">',
         '<meta name="theme-color" content="#09090d">\n<meta name="greed-pit-build" content="0.20.13-native-candidate">',
-        1,
+        "native build marker",
+    )
+
+    # App Review expects the privacy policy to be easily accessible from inside the app.
+    html = replace_once(
+        html,
+        '<button class="secondary" id="feedbackOpen">FEEDBACK / BUG REPORT</button>',
+        '<button class="secondary" id="feedbackOpen">FEEDBACK / BUG REPORT</button><button class="secondary" id="privacyOpen">PRIVACY</button>',
+        "privacy title button",
+    )
+    privacy_screen = f'''<section id="privacyBox" class="screen hidden"><div class="tag">PRIVACY</div><h1 style="font-size:38px">YOUR RUN.<br>YOUR DEVICE.</h1><div class="panel"><p class="sub" style="margin:0;color:#c8c4cf">GREED PIT currently uses no account, ads, analytics, location, contacts, camera, microphone, or cross-app tracking. Game progress, settings, run recovery, and saved feedback stay on this device unless you choose to copy or share them.</p><p style="margin:16px 0 0;font-size:12px"><a href="{PRIVACY_URL}" target="_blank" rel="noopener noreferrer" style="color:#70efae">FULL PRIVACY POLICY</a></p></div><button class="secondary" id="privacyClose">BACK</button></section>\n'''
+    html = replace_once(
+        html,
+        '<section id="rotateNotice"',
+        privacy_screen + '<section id="rotateNotice"',
+        "privacy screen",
+    )
+    html = replace_once(
+        html,
+        "$('#continueRun').onclick=restoreRunSnapshot;$('#audioToggle').onclick=()=>setAudio(!meta.audio);",
+        "$('#continueRun').onclick=restoreRunSnapshot;$('#privacyOpen').onclick=()=>{ui.title.classList.add('hidden');$('#privacyBox').classList.remove('hidden')};$('#privacyClose').onclick=()=>{$('#privacyBox').classList.add('hidden');ui.title.classList.remove('hidden')};$('#audioToggle').onclick=()=>setAudio(!meta.audio);",
+        "privacy handlers",
     )
 
     if WWW.exists():
@@ -60,6 +90,7 @@ def main() -> None:
                 "active_run_recovery": True,
                 "audio": True,
                 "service_worker": False,
+                "privacy_policy": PRIVACY_URL,
             },
             indent=2,
         )
@@ -73,6 +104,9 @@ def main() -> None:
         "AUDIO: ON",
         "CONTINUE SAVED RUN",
         "greedPitActiveRun0212",
+        'id="privacyOpen"',
+        'id="privacyBox"',
+        PRIVACY_URL,
     ]
     missing = [marker for marker in required if marker not in html]
     if missing:
