@@ -1,0 +1,9 @@
+{
+  "game_version": "0.20.13",
+  "source_sha256": "652b45741d3329191e4fc02cca156615ead4343ad615d1dfe36215b67c644aba",
+  "native_candidate": true,
+  "performance_candidate": true,
+  "active_run_recovery": true,
+  "audio": true,
+  "service_worker": false
+}
