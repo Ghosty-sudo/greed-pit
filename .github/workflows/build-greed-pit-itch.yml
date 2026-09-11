@@ -1,5 +1,6 @@
 name: Build GREED PIT itch PC/browser package
 
+# Dedicated distribution workflow: validates the desktop/browser variant before any itch.io push.
 on:
   push:
     branches: [main]
