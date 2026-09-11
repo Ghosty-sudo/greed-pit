@@ -1,0 +1,117 @@
+name: Build GREED PIT itch PC/browser package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-greed-pit-itch.yml"
+      - "tools/build_greed_pit_itch.py"
+      - "src/greed-pit-0.20.13.html"
+      - "assets/audio/**"
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Push this validated build to itch.io"
+        required: true
+        default: false
+        type: boolean
+      itch_target:
+        description: "itch.io target in username/game-slug form"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build deterministic itch package
+        run: python3 tools/build_greed_pit_itch.py
+
+      - name: Validate generated JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('dist/itch/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script>(.*?)</script>', html, flags=re.S)
+          if len(scripts) != 1:
+              raise SystemExit(f'Expected exactly one inline game script, found {len(scripts)}')
+          Path('/tmp/greed-pit-itch.js').write_text(scripts[0], encoding='utf-8')
+          PY
+          node --check /tmp/greed-pit-itch.js
+
+      - name: Verify PC/browser distribution markers
+        run: |
+          set -euo pipefail
+          test -f dist/itch/index.html
+          test -f dist/itch/build.json
+          test -d dist/itch/assets/audio
+          grep -q '0.20.13-itch-pc1' dist/itch/index.html
+          grep -q 'WASD / arrow keys' dist/itch/index.html
+          grep -q "KeyW:'up'" dist/itch/index.html
+          grep -q "ArrowRight:'right'" dist/itch/index.html
+          grep -q "e.code==='Escape'" dist/itch/index.html
+          grep -q "matchMedia('(pointer: coarse)').matches" dist/itch/index.html
+          grep -q 'CONTINUE SAVED RUN' dist/itch/index.html
+          grep -q 'AUDIO: ON' dist/itch/index.html
+          ! grep -q 'navigator.serviceWorker.register' dist/itch/index.html
+
+      - name: Browser self-test and desktop smoke test
+        run: |
+          set -euo pipefail
+          browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$browser" || { echo "No Chrome/Chromium binary on runner"; exit 1; }
+          python3 -m http.server 8127 --bind 127.0.0.1 --directory dist/itch >/tmp/greed-pit-itch-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          sleep 1
+          "$browser" --headless=new --no-sandbox --disable-gpu --window-size=1280,720 --virtual-time-budget=4500 --dump-dom "http://127.0.0.1:8127/?test=1" >/tmp/greed-pit-itch-test.html 2>/tmp/greed-pit-itch-browser.err
+          grep -q 'ALL TESTS PASSED' /tmp/greed-pit-itch-test.html
+          "$browser" --headless=new --no-sandbox --disable-gpu --window-size=1280,720 --virtual-time-budget=2500 --dump-dom "http://127.0.0.1:8127/" >/tmp/greed-pit-itch-title.html 2>>/tmp/greed-pit-itch-browser.err
+          grep -q 'GREED PIT' /tmp/greed-pit-itch-title.html
+          grep -q 'PC: WASD / arrow keys to move' /tmp/greed-pit-itch-title.html
+          grep -q 'AUDIO: ON' /tmp/greed-pit-itch-title.html
+          echo 'GREED PIT itch PC/browser package passed source, syntax, self-test and desktop smoke validation.'
+
+      - name: Package itch upload ZIP
+        run: |
+          cd dist/itch
+          zip -r ../GREED_PIT_ITCH_PC_HTML5.zip .
+          cd ../..
+          python3 - <<'PY'
+          from zipfile import ZipFile
+          p='dist/GREED_PIT_ITCH_PC_HTML5.zip'
+          with ZipFile(p) as z:
+              names=z.namelist()
+              assert 'index.html' in names, names[:20]
+              assert 'build.json' in names
+              assert any(n.startswith('assets/audio/') for n in names)
+          print('itch ZIP root and assets verified')
+          PY
+
+      - name: Upload validated package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GREED-PIT-itch-PC-HTML5
+          path: dist/GREED_PIT_ITCH_PC_HTML5.zip
+          if-no-files-found: error
+
+      - name: Set up itch.io butler
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy }}
+        uses: remarkablegames/setup-butler@v3
+
+      - name: Push validated build to itch.io
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy }}
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+          ITCH_TARGET: ${{ inputs.itch_target }}
+        run: |
+          set -euo pipefail
+          test -n "${BUTLER_API_KEY:-}" || { echo 'BUTLER_API_KEY secret is missing.'; exit 1; }
+          test -n "${ITCH_TARGET:-}" || { echo 'itch_target must be username/game-slug.'; exit 1; }
+          butler push dist/itch "${ITCH_TARGET}:html5-pc" --userversion "0.20.13-pc1"
