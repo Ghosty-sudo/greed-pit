@@ -1,0 +1,44 @@
+name: Publish GREED PIT hardened PC2 playtest
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-github-playtest-pc2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build exact hardened itch PC2 package
+        run: python3 tools/build_greed_pit_itch.py
+
+      - name: Publish dedicated GitHub Pages playtest file
+        run: |
+          set -euo pipefail
+          cp dist/itch/index.html playtest-pc2.html
+          grep -q '0.20.13-itch-pc2' playtest-pc2.html
+          grep -q 'function perfQa()' playtest-pc2.html
+          grep -q 'function audioGesture()' playtest-pc2.html
+          ! grep -q 'navigator.serviceWorker.register' playtest-pc2.html
+
+      - name: Commit generated playtest page
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add playtest-pc2.html
+          if git diff --cached --quiet; then
+            echo "Playtest page already current."
+            exit 0
+          fi
+          git commit -m "Publish hardened GREED PIT PC2 playtest page"
+          git push origin HEAD:main
