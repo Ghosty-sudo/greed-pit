@@ -1,12 +1,15 @@
 name: Build GREED PIT itch PC/browser package
 
-# Dedicated distribution workflow: validates the desktop/browser variant before any itch.io push.
+# Hardened distribution workflow: validates player-path markers, persistence,
+# long-session performance protections, audio lifecycle/decode/playback, and the
+# desktop/browser package before any itch.io push.
 on:
   push:
     branches: [main]
     paths:
       - ".github/workflows/build-greed-pit-itch.yml"
       - "tools/build_greed_pit_itch.py"
+      - "tools/qa_greed_pit_release.py"
       - "src/greed-pit-0.20.13.html"
       - "assets/audio/**"
   workflow_dispatch:
@@ -27,11 +30,15 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build deterministic itch package
+      - name: Build deterministic hardened itch package
         run: python3 tools/build_greed_pit_itch.py
+
+      - name: Run static release-hardening suite
+        run: python3 tools/qa_greed_pit_release.py
 
       - name: Validate generated JavaScript syntax
         run: |
@@ -51,8 +58,9 @@ jobs:
           set -euo pipefail
           test -f dist/itch/index.html
           test -f dist/itch/build.json
+          test -f dist/GREED_PIT_RELEASE_QA.json
           test -d dist/itch/assets/audio
-          grep -q '0.20.13-itch-pc1' dist/itch/index.html
+          grep -q '0.20.13-itch-pc2' dist/itch/index.html
           grep -q 'WASD / arrow keys' dist/itch/index.html
           grep -q "KeyW:'up'" dist/itch/index.html
           grep -q "ArrowRight:'right'" dist/itch/index.html
@@ -60,24 +68,86 @@ jobs:
           grep -q "matchMedia('(pointer: coarse)').matches" dist/itch/index.html
           grep -q 'CONTINUE SAVED RUN' dist/itch/index.html
           grep -q 'AUDIO: ON' dist/itch/index.html
+          grep -q 'SFX_POOL_SIZE=2' dist/itch/index.html
+          grep -q 'function audioGesture()' dist/itch/index.html
+          grep -q 'function perfQa()' dist/itch/index.html
           ! grep -q 'navigator.serviceWorker.register' dist/itch/index.html
+          ! test -f dist/itch/assets/audio/sfx/connection_test.mp3
 
-      - name: Browser self-test and desktop smoke test
+      - name: Start local package server
         run: |
-          set -euo pipefail
+          python3 -m http.server 8127 --bind 127.0.0.1 --directory dist/itch >/tmp/greed-pit-itch-http.log 2>&1 &
+          echo $! >/tmp/greed-pit-server.pid
+          sleep 1
+
+      - name: Resolve Chrome/Chromium
+        run: |
           browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
           test -n "$browser" || { echo "No Chrome/Chromium binary on runner"; exit 1; }
-          python3 -m http.server 8127 --bind 127.0.0.1 --directory dist/itch >/tmp/greed-pit-itch-http.log 2>&1 &
-          server_pid=$!
-          trap 'kill $server_pid 2>/dev/null || true' EXIT
-          sleep 1
-          "$browser" --headless=new --no-sandbox --disable-gpu --window-size=1280,720 --virtual-time-budget=4500 --dump-dom "http://127.0.0.1:8127/?test=1" >/tmp/greed-pit-itch-test.html 2>/tmp/greed-pit-itch-browser.err
-          grep -q 'ALL TESTS PASSED' /tmp/greed-pit-itch-test.html
-          "$browser" --headless=new --no-sandbox --disable-gpu --window-size=1280,720 --virtual-time-budget=2500 --dump-dom "http://127.0.0.1:8127/" >/tmp/greed-pit-itch-title.html 2>>/tmp/greed-pit-itch-browser.err
-          grep -q 'GREED PIT' /tmp/greed-pit-itch-title.html
-          grep -q 'PC: WASD / arrow keys to move' /tmp/greed-pit-itch-title.html
-          grep -q 'AUDIO: ON' /tmp/greed-pit-itch-title.html
-          echo 'GREED PIT itch PC/browser package passed source, syntax, self-test and desktop smoke validation.'
+          echo "BROWSER=$browser" >> "$GITHUB_ENV"
+
+      - name: Browser gameplay self-test
+        run: |
+          "$BROWSER" --headless=new --no-sandbox --disable-gpu \
+            --window-size=1280,720 --virtual-time-budget=5000 \
+            --dump-dom "http://127.0.0.1:8127/?test=1" \
+            >/tmp/greed-pit-selftest.html 2>/tmp/greed-pit-browser.err
+          grep -q 'ALL TESTS PASSED' /tmp/greed-pit-selftest.html
+
+      - name: Desktop opening / control smoke test
+        run: |
+          "$BROWSER" --headless=new --no-sandbox --disable-gpu \
+            --window-size=1280,720 --virtual-time-budget=3000 \
+            --dump-dom "http://127.0.0.1:8127/" \
+            >/tmp/greed-pit-title.html 2>>/tmp/greed-pit-browser.err
+          grep -q 'GREED PIT' /tmp/greed-pit-title.html
+          grep -q 'PC: WASD / arrow keys to move' /tmp/greed-pit-title.html
+          grep -q 'AUDIO: ON' /tmp/greed-pit-title.html
+
+      - name: Audio lifecycle / state-machine QA
+        run: |
+          "$BROWSER" --headless=new --no-sandbox --disable-gpu \
+            --window-size=1280,720 --virtual-time-budget=3500 \
+            --dump-dom "http://127.0.0.1:8127/?audioqa=1" \
+            >/tmp/greed-pit-audioqa.html 2>>/tmp/greed-pit-browser.err
+          grep -q 'GREED PIT AUDIO LIFECYCLE QA' /tmp/greed-pit-audioqa.html
+          grep -q 'QA PASSED' /tmp/greed-pit-audioqa.html
+
+      - name: Audio asset metadata / decode QA
+        run: |
+          "$BROWSER" --headless=new --no-sandbox --disable-gpu \
+            --window-size=1280,720 --virtual-time-budget=9000 \
+            --dump-dom "http://127.0.0.1:8127/?mediaqa=1" \
+            >/tmp/greed-pit-mediaqa.html 2>>/tmp/greed-pit-browser.err
+          grep -q 'GREED PIT AUDIO ASSET / DECODE QA' /tmp/greed-pit-mediaqa.html
+          grep -q 'QA PASSED' /tmp/greed-pit-mediaqa.html
+
+      - name: Actual muted audio playback QA
+        run: |
+          "$BROWSER" --headless=new --no-sandbox --disable-gpu \
+            --autoplay-policy=no-user-gesture-required \
+            --window-size=1280,720 --virtual-time-budget=5000 \
+            --dump-dom "http://127.0.0.1:8127/?playbackqa=1" \
+            >/tmp/greed-pit-playbackqa.html 2>>/tmp/greed-pit-browser.err
+          grep -q 'GREED PIT ACTUAL AUDIO PLAYBACK QA' /tmp/greed-pit-playbackqa.html
+          grep -q 'QA PASSED' /tmp/greed-pit-playbackqa.html
+
+      - name: 45-minute-equivalent density performance stress QA
+        run: |
+          "$BROWSER" --headless=new --no-sandbox --disable-gpu \
+            --window-size=1280,720 --virtual-time-budget=9000 \
+            --dump-dom "http://127.0.0.1:8127/?perfqa=1" \
+            >/tmp/greed-pit-perfqa.html 2>>/tmp/greed-pit-browser.err
+          grep -q 'GREED PIT LONG-SESSION PERFORMANCE QA' /tmp/greed-pit-perfqa.html
+          grep -q 'QA PASSED' /tmp/greed-pit-perfqa.html
+          cat /tmp/greed-pit-perfqa.html | grep -o 'stress_ms=[^<]*' || true
+
+      - name: Stop local package server
+        if: always()
+        run: |
+          if test -f /tmp/greed-pit-server.pid; then
+            kill "$(cat /tmp/greed-pit-server.pid)" 2>/dev/null || true
+          fi
 
       - name: Package itch upload ZIP
         run: |
@@ -92,14 +162,17 @@ jobs:
               assert 'index.html' in names, names[:20]
               assert 'build.json' in names
               assert any(n.startswith('assets/audio/') for n in names)
-          print('itch ZIP root and assets verified')
+              assert 'assets/audio/sfx/connection_test.mp3' not in names
+          print('itch ZIP root, audio set, and package hygiene verified')
           PY
 
-      - name: Upload validated package artifact
+      - name: Upload validated package and QA report
         uses: actions/upload-artifact@v4
         with:
           name: GREED-PIT-itch-PC-HTML5
-          path: dist/GREED_PIT_ITCH_PC_HTML5.zip
+          path: |
+            dist/GREED_PIT_ITCH_PC_HTML5.zip
+            dist/GREED_PIT_RELEASE_QA.json
           if-no-files-found: error
 
       - name: Set up itch.io butler
@@ -115,4 +188,4 @@ jobs:
           set -euo pipefail
           test -n "${BUTLER_API_KEY:-}" || { echo 'BUTLER_API_KEY secret is missing.'; exit 1; }
           test -n "${ITCH_TARGET:-}" || { echo 'itch_target must be username/game-slug.'; exit 1; }
-          butler push dist/itch "${ITCH_TARGET}:html5-pc" --userversion "0.20.13-pc1"
+          butler push dist/itch "${ITCH_TARGET}:html5-pc" --userversion "0.20.13-pc2"
