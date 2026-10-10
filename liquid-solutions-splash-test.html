@@ -57,7 +57,7 @@ h1{font-size:clamp(44px,14vw,82px);line-height:.84;margin:0 0 12px;letter-spacin
 #liquidSplash{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:#000;opacity:1;pointer-events:auto}
 #liquidSplashPanel{width:min(68vw,520px);max-width:520px;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#8d8d8d;border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.45);opacity:0;transform:translateY(6px) scale(.992);transition:opacity .35s ease,transform .35s ease}
 #liquidSplash.show #liquidSplashPanel{opacity:1;transform:translateY(0) scale(1)}
-#liquidSplash.out{opacity:0;transition:opacity .45s ease;pointer-events:none}
+#liquidSplash.logoOut #liquidSplashPanel{opacity:0;transform:translateY(0) scale(.992);transition:opacity .45s ease,transform .45s ease}
 #liquidSplashLogo{display:block;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
 
 
@@ -116,8 +116,8 @@ if(__liquidSplash){
  const __skipLiquidSplash=['test','audioqa','mediaqa','playbackqa','perfqa'].some(k=>__splashParams.has(k));
  if(__skipLiquidSplash){__liquidSplash.remove()}else{
   setTimeout(()=>__liquidSplash.classList.add('show'),200);
-  setTimeout(()=>__liquidSplash.classList.add('out'),1700);
-  setTimeout(()=>__liquidSplash.remove(),2180);
+  setTimeout(()=>__liquidSplash.classList.add('logoOut'),1700);
+  setTimeout(()=>__liquidSplash.remove(),2400);
  }
 }
 
