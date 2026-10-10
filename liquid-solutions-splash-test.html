@@ -115,9 +115,9 @@ if(__liquidSplash){
  const __splashParams=new URLSearchParams(location.search);
  const __skipLiquidSplash=['test','audioqa','mediaqa','playbackqa','perfqa'].some(k=>__splashParams.has(k));
  if(__skipLiquidSplash){__liquidSplash.remove()}else{
-  setTimeout(()=>__liquidSplash.classList.add('show'),200);
-  setTimeout(()=>__liquidSplash.classList.add('logoOut'),1700);
-  setTimeout(()=>__liquidSplash.remove(),2400);
+  setTimeout(()=>__liquidSplash.classList.add('show'),250);
+  setTimeout(()=>__liquidSplash.classList.add('logoOut'),2750);
+  setTimeout(()=>__liquidSplash.remove(),3550);
  }
 }
 
